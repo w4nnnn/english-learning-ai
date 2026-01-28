@@ -1,19 +1,25 @@
-export type LessonType = 'arrange_words' | 'select_image' | 'multiple_choice';
+import { db } from '@/lib/db';
+import { lessons, users } from '@/lib/db/schema';
+import { hash } from 'bcryptjs';
+import { eq } from 'drizzle-orm';
 
-export interface Lesson {
+// --- Types & Interfaces ---
+
+type LessonType = 'arrange_words' | 'select_image' | 'multiple_choice';
+
+interface Lesson {
     id: string;
     type: LessonType;
     question: string;
-    // For arrange_words: the correct sentence. words are shuffled automatically or provided in 'options'
     correctAnswer: string;
-    // For multiple_choice or select_image: array of choices
     options?: { id: string; label: string; image?: string; isCorrect?: boolean }[];
-    // For arrange_words: items to click
     words?: string[];
     explanation?: string;
 }
 
-export const NOUN_PHRASE_LESSONS: Lesson[] = [
+// --- Data ---
+
+const NOUN_PHRASE_LESSONS: Lesson[] = [
     // LEVEL 1: Introduction (Simple Noun Phrase)
     {
         id: 'l1-1',
@@ -78,3 +84,68 @@ export const NOUN_PHRASE_LESSONS: Lesson[] = [
         explanation: 'Urutan kata sifat: Ukuran (Big) dulu, baru Warna (Red). -> "Big red apple".',
     },
 ];
+
+// --- Seed Functions ---
+
+export async function seedUsers() {
+    console.log('Seeding users...');
+    const existingUser = await db.select().from(users).where(eq(users.username, 'admin')).get();
+
+    if (!existingUser) {
+        // Default password: admin123
+        const hashedPassword = await hash('admin123', 10);
+        await db.insert(users).values({
+            id: 'admin-user-id',
+            username: 'admin',
+            passwordHash: hashedPassword,
+            heartCount: 5,
+            xp: 100,
+            streak: 1,
+        });
+        console.log('User "admin" created.');
+    } else {
+        console.log('User "admin" already exists.');
+    }
+}
+
+export async function seedLessons() {
+    console.log('Seeding lessons...');
+
+    // Clear existing lessons to avoid duplicates if re-run
+    await db.delete(lessons);
+
+    const lessonValues = NOUN_PHRASE_LESSONS.map((l, index) => {
+        // Separate core columns from content JSON
+        const { id, type, question, ...rest } = l;
+
+        return {
+            id,
+            type,
+            question,
+            order: index + 1,
+            content: rest, // title, answers, options, etc. go here
+        };
+    });
+
+    await db.insert(lessons).values(lessonValues);
+    console.log(`Seeded ${lessonValues.length} lessons.`);
+}
+
+// --- Main Execution (if run directly) ---
+
+// Check if this file is being run directly via tsx
+import { fileURLToPath } from 'url';
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    (async () => {
+        try {
+            console.log('Starting full database seed...');
+            await seedUsers();
+            await seedLessons();
+            console.log('Database seeding completed successfully.');
+            process.exit(0);
+        } catch (error) {
+            console.error('Database seeding failed:', error);
+            process.exit(1);
+        }
+    })();
+}

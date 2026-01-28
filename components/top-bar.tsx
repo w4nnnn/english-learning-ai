@@ -2,7 +2,7 @@
 'use client';
 
 import { Heart } from 'lucide-react';
-import { useGameStore } from '@/lib/game-store';
+import { useGameStore } from '@/lib/actions/game-store';
 import { motion } from 'framer-motion';
 
 export function TopBar() {
