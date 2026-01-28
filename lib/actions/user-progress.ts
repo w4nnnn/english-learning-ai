@@ -1,38 +1,112 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { users, userProgress } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { users, userModuleProgress, userItemResponses, moduleItems } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export async function saveUserProgress(userId: string, data: {
     heartCount?: number;
     xp?: number;
     streak?: number;
-    currentLessonIndex?: number;
 }) {
-    // Only update existing users. Users must be created via Auth.
     await db.update(users)
         .set({
             heartCount: data.heartCount,
             xp: data.xp,
             streak: data.streak,
-            currentLessonIndex: data.currentLessonIndex,
             lastActive: new Date(),
         })
         .where(eq(users.id, userId));
 }
 
-export async function saveLessonHistory(userId: string, lessonId: string, score: number, status: 'completed' | 'locked' | 'unlocked') {
-    await db.insert(userProgress).values({
-        userId,
-        lessonId,
-        score,
-        status,
-        completedAt: new Date(),
-    });
+export async function saveItemResponse(
+    userId: string,
+    moduleId: string,
+    itemId: string,
+    userAnswer: string,
+    isCorrect: boolean
+) {
+    // Check if response already exists
+    const existing = await db.select()
+        .from(userItemResponses)
+        .where(and(
+            eq(userItemResponses.userId, userId),
+            eq(userItemResponses.itemId, itemId)
+        ))
+        .get();
+
+    if (existing) {
+        // Update attempt count
+        await db.update(userItemResponses)
+            .set({
+                userAnswer,
+                isCorrect,
+                attemptCount: (existing.attemptCount ?? 1) + 1,
+                answeredAt: new Date(),
+            })
+            .where(eq(userItemResponses.id, existing.id));
+    } else {
+        await db.insert(userItemResponses).values({
+            userId,
+            moduleId,
+            itemId,
+            userAnswer,
+            isCorrect,
+        });
+    }
+}
+
+export async function updateModuleProgress(
+    userId: string,
+    moduleId: string,
+    data: {
+        currentItemIndex?: number;
+        status?: 'not_started' | 'in_progress' | 'completed';
+        score?: number;
+        completedItems?: number;
+    }
+) {
+    const existing = await db.select()
+        .from(userModuleProgress)
+        .where(and(
+            eq(userModuleProgress.userId, userId),
+            eq(userModuleProgress.moduleId, moduleId)
+        ))
+        .get();
+
+    if (existing) {
+        await db.update(userModuleProgress)
+            .set({
+                ...data,
+                completedAt: data.status === 'completed' ? new Date() : undefined,
+            })
+            .where(eq(userModuleProgress.id, existing.id));
+    } else {
+        // Count total items for this module
+        const items = await db.select().from(moduleItems).where(eq(moduleItems.moduleId, moduleId));
+        const questionItems = items.filter(i => !['header', 'material'].includes(i.type));
+
+        await db.insert(userModuleProgress).values({
+            userId,
+            moduleId,
+            status: 'in_progress',
+            totalItems: questionItems.length,
+            startedAt: new Date(),
+            ...data,
+        });
+    }
 }
 
 export async function getUserProgress(userId: string) {
-    const user = await db.select().from(users).where(eq(users.id, userId)).get();
-    return user;
+    return await db.select().from(users).where(eq(users.id, userId)).get();
+}
+
+export async function getUserModuleProgress(userId: string, moduleId: string) {
+    return await db.select()
+        .from(userModuleProgress)
+        .where(and(
+            eq(userModuleProgress.userId, userId),
+            eq(userModuleProgress.moduleId, moduleId)
+        ))
+        .get();
 }

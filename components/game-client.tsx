@@ -56,12 +56,11 @@ export default function GameClient({ initialLessons, initialProgress, userId }: 
         heartCount: hearts,
         xp: xp,
         streak: streak,
-        currentLessonIndex: currentLessonIndex
       });
     }, 1000); // Debounce saves
 
     return () => clearTimeout(debouncedSave);
-  }, [hearts, xp, streak, currentLessonIndex, userId]);
+  }, [hearts, xp, streak, userId]);
 
   const currentLesson = initialLessons[currentLessonIndex % initialLessons.length];
 

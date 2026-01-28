@@ -1,29 +1,56 @@
 import { db } from '@/lib/db';
-import { lessons, users } from '@/lib/db/schema';
+import { modules, moduleItems, users } from '@/lib/db/schema';
 import { hash } from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 
-// --- Types & Interfaces ---
+// --- Sample Data ---
 
-type LessonType = 'arrange_words' | 'select_image' | 'multiple_choice';
-
-interface Lesson {
-    id: string;
-    type: LessonType;
-    question: string;
-    correctAnswer: string;
-    options?: { id: string; label: string; image?: string; isCorrect?: boolean }[];
-    words?: string[];
-    explanation?: string;
-}
-
-// --- Data ---
-
-const NOUN_PHRASE_LESSONS: Lesson[] = [
-    // LEVEL 1: Introduction (Simple Noun Phrase)
+const SAMPLE_MODULES = [
     {
-        id: 'l1-1',
+        id: 'module-1',
+        title: 'Noun Phrase - Pengenalan',
+        description: 'Pelajari dasar-dasar Noun Phrase (Frasa Kata Benda) dalam bahasa Inggris.',
+        order: 1,
+        isPublished: true,
+    },
+    {
+        id: 'module-2',
+        title: 'Noun Phrase - Intermediate',
+        description: 'Materi lanjutan tentang Noun Phrase dengan contoh lebih kompleks.',
+        order: 2,
+        isPublished: false,
+    },
+];
+
+const SAMPLE_MODULE_ITEMS = [
+    // Module 1 Items
+    {
+        id: 'item-1-1',
+        moduleId: 'module-1',
+        type: 'header',
+        order: 1,
+        title: 'Bagian 1: Apa itu Noun Phrase?',
+    },
+    {
+        id: 'item-1-2',
+        moduleId: 'module-1',
+        type: 'material',
+        order: 2,
+        title: 'Pengenalan Noun Phrase',
+        content: `**Noun Phrase** adalah frasa yang terdiri dari kata benda (noun) sebagai inti dan kata-kata lain yang memodifikasinya.
+
+Rumus dasar:
+- **Determiner** (a, the, this, those, two, dll)
+- **Adjective** (big, red, beautiful, dll)
+- **Noun** (car, house, book, dll)
+
+Contoh: "A beautiful house" = Det + Adj + Noun`,
+    },
+    {
+        id: 'item-1-3',
+        moduleId: 'module-1',
         type: 'multiple_choice',
+        order: 3,
         question: 'Manakah yang merupakan Noun Phrase (Frasa Kata Benda)?',
         options: [
             { id: 'a', label: 'Run fast', isCorrect: false },
@@ -31,28 +58,40 @@ const NOUN_PHRASE_LESSONS: Lesson[] = [
             { id: 'c', label: 'Very quickly', isCorrect: false },
         ],
         correctAnswer: 'b',
-        explanation: '"A big house" adalah Noun Phrase karena terdiri dari Determiner (A) + Adjective (big) + Noun (house).',
+        xpReward: 10,
     },
     {
-        id: 'l1-2',
+        id: 'item-1-4',
+        moduleId: 'module-1',
         type: 'arrange_words',
+        order: 4,
         question: 'Susunlah menjadi frasa yang benar: "Sebuah mobil merah"',
+        options: ['car', 'A', 'red', 'blue', 'run'],
         correctAnswer: 'A red car',
-        words: ['car', 'A', 'red', 'blue', 'run'],
-        explanation: 'Rumus: Determiner (A) + Adjective (red) + Noun (car).',
+        xpReward: 15,
     },
-    // LEVEL 2: Determiner + Adjective + Noun
     {
-        id: 'l2-1',
+        id: 'item-1-5',
+        moduleId: 'module-1',
+        type: 'header',
+        order: 5,
+        title: 'Bagian 2: Latihan',
+    },
+    {
+        id: 'item-1-6',
+        moduleId: 'module-1',
         type: 'arrange_words',
+        order: 6,
         question: 'Terjemahkan: "Dua buku lama"',
+        options: ['books', 'Two', 'old', 'new', 'apple'],
         correctAnswer: 'Two old books',
-        words: ['books', 'Two', 'old', 'new', 'apple'],
-        explanation: 'Determiner (Two) + Adjective (old) + Noun (books).',
+        xpReward: 15,
     },
     {
-        id: 'l2-2',
+        id: 'item-1-7',
+        moduleId: 'module-1',
         type: 'multiple_choice',
+        order: 7,
         question: 'Lengkapi frasa ini: "___ beautiful flower"',
         options: [
             { id: 'a', label: 'A', isCorrect: true },
@@ -60,28 +99,7 @@ const NOUN_PHRASE_LESSONS: Lesson[] = [
             { id: 'c', label: 'Of', isCorrect: false },
         ],
         correctAnswer: 'a',
-        explanation: 'Gunakan "A" karena "beautiful" dimulai dengan bunyi konsonan.',
-    },
-    // LEVEL 3: Complex / Practice
-    {
-        id: 'l3-1',
-        type: 'arrange_words',
-        question: 'Susunlah: "Siswa-siswa pintar itu"',
-        correctAnswer: 'Those smart students',
-        words: ['students', 'Those', 'smart', 'this', 'student'],
-        explanation: 'Determiner (Those) + Adjective (smart) + Noun (students).',
-    },
-    {
-        id: 'l3-2',
-        type: 'multiple_choice',
-        question: 'Manakah susunan yang benar?',
-        options: [
-            { id: 'a', label: 'Red big apple', isCorrect: false },
-            { id: 'b', label: 'Big red apple', isCorrect: true },
-            { id: 'c', label: 'Apple big red', isCorrect: false },
-        ],
-        correctAnswer: 'b',
-        explanation: 'Urutan kata sifat: Ukuran (Big) dulu, baru Warna (Red). -> "Big red apple".',
+        xpReward: 10,
     },
 ];
 
@@ -92,7 +110,6 @@ export async function seedUsers() {
     const existingUser = await db.select().from(users).where(eq(users.username, 'admin')).get();
 
     if (!existingUser) {
-        // Default password: admin123
         const hashedPassword = await hash('admin123', 10);
         await db.insert(users).values({
             id: 'admin-user-id',
@@ -108,39 +125,36 @@ export async function seedUsers() {
     }
 }
 
-export async function seedLessons() {
-    console.log('Seeding lessons...');
+export async function seedModules() {
+    console.log('Seeding modules...');
 
-    // Clear existing lessons to avoid duplicates if re-run
-    await db.delete(lessons);
+    // Clear existing data
+    await db.delete(moduleItems);
+    await db.delete(modules);
 
-    const lessonValues = NOUN_PHRASE_LESSONS.map((l, index) => {
-        // Separate core columns from content JSON
-        const { id, type, question, ...rest } = l;
+    // Insert modules
+    await db.insert(modules).values(SAMPLE_MODULES);
+    console.log(`Seeded ${SAMPLE_MODULES.length} modules.`);
 
-        return {
-            id,
-            type,
-            question,
-            order: index + 1,
-            content: rest, // title, answers, options, etc. go here
-        };
-    });
-
-    await db.insert(lessons).values(lessonValues);
-    console.log(`Seeded ${lessonValues.length} lessons.`);
+    // Insert module items
+    await db.insert(moduleItems).values(SAMPLE_MODULE_ITEMS);
+    console.log(`Seeded ${SAMPLE_MODULE_ITEMS.length} module items.`);
 }
 
-// --- Main Execution (if run directly) ---
+// Backward compatibility
+export async function seedLessons() {
+    await seedModules();
+}
 
-// Check if this file is being run directly via tsx
+// --- Main Execution ---
+
 import { fileURLToPath } from 'url';
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     (async () => {
         try {
-            console.log('Starting full database seed...');
+            console.log('Starting database seed...');
             await seedUsers();
-            await seedLessons();
+            await seedModules();
             console.log('Database seeding completed successfully.');
             process.exit(0);
         } catch (error) {
