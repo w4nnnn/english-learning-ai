@@ -4,7 +4,7 @@ import { createModule } from '@/lib/actions/modules';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, BookOpen, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewModulePage() {
@@ -36,57 +36,76 @@ export default function NewModulePage() {
     };
 
     return (
-        <div>
-            <div className="flex items-center gap-4 mb-6">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-4">
                 <Link
                     href="/admin/modules"
-                    className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-elegant"
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
-                <h1 className="text-2xl font-bold text-slate-800">New Module</h1>
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-md">
+                        <BookOpen className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-foreground">New Module</h1>
+                        <p className="text-sm text-muted-foreground">Create a new learning module</p>
+                    </div>
+                </div>
             </div>
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="max-w-2xl">
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+                <div className="bg-white rounded-2xl shadow-elegant border border-border p-8 space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                            Title <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                            Title <span className="text-destructive">*</span>
                         </label>
                         <input
                             type="text"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             placeholder="e.g., Noun Phrase - Introduction"
-                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                            className="w-full px-4 py-3 border border-border rounded-xl bg-background focus-elegant transition-elegant"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                             Description
                         </label>
                         <textarea
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             placeholder="Brief description of this module..."
-                            rows={3}
-                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none"
+                            rows={4}
+                            className="w-full px-4 py-3 border border-border rounded-xl bg-background focus-elegant transition-elegant resize-none"
                         />
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 pt-4 border-t border-border">
                         <button
                             type="submit"
                             disabled={isPending}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-primary text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-elegant disabled:opacity-50"
                         >
-                            <Save className="w-4 h-4" />
-                            {isPending ? 'Creating...' : 'Create Module'}
+                            {isPending ? (
+                                <>
+                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Creating...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-4 h-4" />
+                                    Create Module
+                                </>
+                            )}
                         </button>
                         <Link
                             href="/admin/modules"
-                            className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            className="px-6 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-elegant font-medium"
                         >
                             Cancel
                         </Link>

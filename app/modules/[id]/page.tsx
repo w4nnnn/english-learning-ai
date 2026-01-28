@@ -3,7 +3,7 @@ import { getUserModuleProgress } from '@/lib/actions/user-progress';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
-import { ModulePlayer } from './module-player';
+import { ModulePlayer } from '@/components/modules/module-player';
 
 export const dynamic = 'force-dynamic';
 

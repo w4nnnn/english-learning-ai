@@ -1,91 +1,118 @@
 import { getModules } from '@/lib/actions/modules';
 import Link from 'next/link';
-import { Plus, Eye, EyeOff, Pencil, Trash2 } from 'lucide-react';
-import { DeleteModuleButton, TogglePublishButton } from './module-actions';
+import { Plus, Eye, EyeOff, Pencil, BookOpen, Search } from 'lucide-react';
+import { DeleteModuleButton, TogglePublishButton } from '@/components/admin/modules/module-actions';
 
 export default async function ModulesPage() {
     const modules = await getModules(true);
 
     return (
-        <div>
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-slate-800">Modules</h1>
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground">Modules</h1>
+                    <p className="text-muted-foreground mt-1">Manage your learning modules</p>
+                </div>
                 <Link
                     href="/admin/modules/new"
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-primary text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-elegant"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-5 h-5" />
                     New Module
                 </Link>
             </div>
 
             {modules.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-                    <p className="text-slate-500 mb-4">No modules yet. Create your first module!</p>
+                <div className="bg-white rounded-2xl shadow-elegant border border-border p-12 text-center">
+                    <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <BookOpen className="w-10 h-10 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">No Modules Yet</h3>
+                    <p className="text-muted-foreground mb-6">
+                        Create your first learning module to get started
+                    </p>
                     <Link
                         href="/admin/modules/new"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-primary text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-elegant"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-5 h-5" />
                         Create Module
                     </Link>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th className="text-left px-6 py-3 text-sm font-medium text-slate-500">Order</th>
-                                <th className="text-left px-6 py-3 text-sm font-medium text-slate-500">Title</th>
-                                <th className="text-left px-6 py-3 text-sm font-medium text-slate-500">Status</th>
-                                <th className="text-right px-6 py-3 text-sm font-medium text-slate-500">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200">
-                            {modules.map((module) => (
-                                <tr key={module.id} className="hover:bg-slate-50">
-                                    <td className="px-6 py-4 text-sm text-slate-600">{module.order}</td>
-                                    <td className="px-6 py-4">
-                                        <p className="font-medium text-slate-800">{module.title}</p>
+                <div className="bg-white rounded-2xl shadow-elegant border border-border overflow-hidden">
+                    {/* Table Header */}
+                    <div className="px-6 py-4 border-b border-border bg-muted/30">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">
+                                {modules.length} module{modules.length !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Module List */}
+                    <div className="divide-y divide-border">
+                        {modules.map((module, index) => (
+                            <div
+                                key={module.id}
+                                className="flex items-center gap-4 p-4 sm:p-6 hover:bg-muted/30 transition-elegant group"
+                            >
+                                {/* Order Badge */}
+                                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center text-white font-bold shadow-md flex-shrink-0">
+                                    {module.order || index + 1}
+                                </div>
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <Link
+                                        href={`/admin/modules/${module.id}`}
+                                        className="block"
+                                    >
+                                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-elegant truncate">
+                                            {module.title}
+                                        </h3>
                                         {module.description && (
-                                            <p className="text-sm text-slate-500 truncate max-w-md">
+                                            <p className="text-sm text-muted-foreground truncate mt-1">
                                                 {module.description}
                                             </p>
                                         )}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {module.isPublished ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                                                <Eye className="w-3 h-3" />
-                                                Published
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
-                                                <EyeOff className="w-3 h-3" />
-                                                Draft
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <TogglePublishButton
-                                                moduleId={module.id}
-                                                isPublished={module.isPublished ?? false}
-                                            />
-                                            <Link
-                                                href={`/admin/modules/${module.id}`}
-                                                className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Edit"
-                                            >
-                                                <Pencil className="w-4 h-4" />
-                                            </Link>
-                                            <DeleteModuleButton moduleId={module.id} />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    </Link>
+                                </div>
+
+                                {/* Status Badge */}
+                                <div className="hidden sm:block">
+                                    {module.isPublished ? (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-sm font-medium rounded-full border border-green-200">
+                                            <Eye className="w-3.5 h-3.5" />
+                                            Published
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-sm font-medium rounded-full border border-border">
+                                            <EyeOff className="w-3.5 h-3.5" />
+                                            Draft
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-1">
+                                    <TogglePublishButton
+                                        moduleId={module.id}
+                                        isPublished={module.isPublished ?? false}
+                                    />
+                                    <Link
+                                        href={`/admin/modules/${module.id}`}
+                                        className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-elegant"
+                                        title="Edit"
+                                    >
+                                        <Pencil className="w-4 h-4" />
+                                    </Link>
+                                    <DeleteModuleButton moduleId={module.id} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
