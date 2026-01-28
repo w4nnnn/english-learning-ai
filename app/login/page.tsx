@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { signIn } from 'next-auth/react';
+
+// ... imports ...
 
 export default function LoginPage() {
     const router = useRouter();
@@ -18,12 +20,19 @@ export default function LoginPage() {
         setIsLoading(true);
 
         const formData = new FormData(event.currentTarget);
-        const result = await login(formData);
+        const username = formData.get('username') as string;
+        const password = formData.get('password') as string;
+
+        const result = await signIn('credentials', {
+            username,
+            password,
+            redirect: false,
+        });
 
         setIsLoading(false);
 
         if (result?.error) {
-            toast.error(result.error);
+            toast.error("Login gagal. Periksa username dan password.");
         } else {
             toast.success("Login berhasil!");
             router.push('/');

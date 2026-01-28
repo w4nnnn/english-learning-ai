@@ -11,12 +11,6 @@ export const users = sqliteTable('users', {
     lastActive: integer('last_active', { mode: 'timestamp' }),
 });
 
-export const sessions = sqliteTable('sessions', {
-    id: text('id').primaryKey(),
-    userId: text('user_id').notNull().references(() => users.id),
-    expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-});
-
 export const lessons = sqliteTable('lessons', {
     id: text('id').primaryKey(), // We can use the logic 'lesson_1', 'lesson_2' etc.
     type: text('type').notNull(), // 'arrange_words', etc.

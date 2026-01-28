@@ -1,6 +1,7 @@
 import { getLessons } from '@/lib/actions/lessons';
 import { seedLessons, seedUsers } from '@/lib/db/seed';
-import { getSession } from '@/lib/actions/auth';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { getUserProgress } from '@/lib/actions/user-progress';
 import GameClient from '@/components/game-client';
 import { redirect } from 'next/navigation';
@@ -8,13 +9,17 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const session = await getSession();
-  if (!session) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user) {
     redirect('/login');
   }
 
+  // @ts-ignore
+  const userId = session.user.id;
+
   let lessons = await getLessons();
-  const userProgress = await getUserProgress(session.userId);
+  const userProgress = await getUserProgress(userId);
 
   if (lessons.length === 0) {
     await seedUsers();
@@ -22,5 +27,5 @@ export default async function Page() {
     lessons = await getLessons();
   }
 
-  return <GameClient initialLessons={lessons} initialProgress={userProgress} userId={session.userId} />;
+  return <GameClient initialLessons={lessons} initialProgress={userProgress} userId={userId} />;
 }
