@@ -110,6 +110,11 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
         setUserAnswer(words.join(' '));
     }, []);
 
+    const handleRetry = () => {
+        setStatus('idle');
+        setUserAnswer(null);
+    };
+
     if (!currentItem) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-elegant">
@@ -252,24 +257,61 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
 
                 {/* Material Video Type */}
                 {
-                    currentItem.type === 'material_video' && (
-                        <div className="flex-1">
-                            {currentItem.title && (
-                                <h2 className="text-2xl font-bold text-foreground mb-6">
-                                    {currentItem.title}
-                                </h2>
-                            )}
-                            <div className="bg-black rounded-2xl shadow-elegant overflow-hidden">
-                                {currentItem.content && (
-                                    <video
-                                        src={currentItem.content}
-                                        controls
-                                        className="w-full h-auto"
-                                    />
+                    currentItem.type === 'material_video' && (() => {
+                        const content = currentItem.content || '';
+                        // Extract YouTube ID
+                        const ytMatch = content.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]+)/);
+                        const youtubeId = ytMatch ? ytMatch[1] : null;
+                        // Extract Vimeo ID
+                        const vimeoMatch = content.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+                        const vimeoId = vimeoMatch ? vimeoMatch[1] : null;
+                        // Check if direct video
+                        const isDirectVideo = content.match(/\.(mp4|webm|ogg)/i);
+
+                        return (
+                            <div className="flex-1">
+                                {currentItem.title && (
+                                    <h2 className="text-2xl font-bold text-foreground mb-6">
+                                        {currentItem.title}
+                                    </h2>
                                 )}
+                                <div className="bg-black rounded-2xl shadow-elegant overflow-hidden">
+                                    {youtubeId && (
+                                        <div className="aspect-video">
+                                            <iframe
+                                                src={`https://www.youtube.com/embed/${youtubeId}`}
+                                                className="w-full h-full"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        </div>
+                                    )}
+                                    {vimeoId && (
+                                        <div className="aspect-video">
+                                            <iframe
+                                                src={`https://player.vimeo.com/video/${vimeoId}`}
+                                                className="w-full h-full"
+                                                allow="autoplay; fullscreen; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        </div>
+                                    )}
+                                    {isDirectVideo && (
+                                        <video
+                                            src={content}
+                                            controls
+                                            className="w-full h-auto"
+                                        />
+                                    )}
+                                    {!youtubeId && !vimeoId && !isDirectVideo && content && (
+                                        <div className="aspect-video flex items-center justify-center text-white/50">
+                                            <p>Unsupported video format</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )
+                        );
+                    })()
                 }
 
                 {/* Question Types */}
@@ -280,9 +322,16 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                                 <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
                                     Pertanyaan {currentIndex + 1} dari {totalItems}
                                 </span>
-                                <h2 className="text-2xl font-bold text-foreground">
-                                    {currentItem.question}
-                                </h2>
+                                <div className="text-2xl font-bold text-foreground">
+                                    <ReactMarkdown
+                                        components={{
+                                            p: ({ node, ...props }: any) => <div {...props} />,
+                                            strong: ({ node, ...props }: any) => <span className="text-primary" {...props} />
+                                        }}
+                                    >
+                                        {currentItem.question || ''}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
 
                             <div className="bg-white rounded-2xl p-6 shadow-elegant border border-border">
@@ -404,32 +453,48 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                         </div>
                     )}
 
-                    {/* Action Button */}
-                    <button
-                        onClick={handleCheck}
-                        disabled={hearts === 0 || (status === 'idle' && !userAnswer && !['header', 'material'].includes(currentItem.type))}
-                        className={`
-                            w-full py-4 rounded-2xl font-bold text-lg
-                            flex items-center justify-center gap-2
-                            transition-elegant disabled:opacity-50 disabled:cursor-not-allowed
-                            ${status === 'correct'
-                                ? 'bg-gradient-success text-white shadow-lg hover:shadow-xl'
-                                : status === 'wrong'
-                                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl'
+                    {/* Action Buttons */}
+                    {status === 'wrong' ? (
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleRetry}
+                                className="flex-1 py-4 rounded-2xl font-bold text-lg border-2 border-primary text-primary hover:bg-primary/10 transition-elegant"
+                            >
+                                Coba Lagi
+                            </button>
+                            <button
+                                onClick={handleNext}
+                                className="flex-1 py-4 rounded-2xl font-bold text-lg bg-slate-500 hover:bg-slate-600 text-white transition-elegant flex items-center justify-center gap-2"
+                            >
+                                <span>Lanjutkan</span>
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleCheck}
+                            disabled={hearts === 0 || (status === 'idle' && !userAnswer && !['header', 'material', 'material_image', 'material_video'].includes(currentItem.type))}
+                            className={`
+                                w-full py-4 rounded-2xl font-bold text-lg
+                                flex items-center justify-center gap-2
+                                transition-elegant disabled:opacity-50 disabled:cursor-not-allowed
+                                ${status === 'correct'
+                                    ? 'bg-gradient-success text-white shadow-lg hover:shadow-xl'
                                     : 'bg-gradient-primary text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5'
-                            }
-                        `}
-                    >
-                        <span>
-                            {status === 'idle'
-                                ? ['header', 'material'].includes(currentItem.type)
-                                    ? 'Lanjutkan'
-                                    : 'Periksa Jawaban'
-                                : 'Lanjutkan'
-                            }
-                        </span>
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
+                                }
+                            `}
+                        >
+                            <span>
+                                {status === 'idle'
+                                    ? ['header', 'material', 'material_image', 'material_video'].includes(currentItem.type)
+                                        ? 'Lanjutkan'
+                                        : 'Periksa Jawaban'
+                                    : 'Lanjutkan'
+                                }
+                            </span>
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    )}
                 </div>
             </footer >
         </div >

@@ -85,8 +85,26 @@ export function MediaUploader({
         setError(null);
     };
 
-    const isImage = value?.match(/\.(jpeg|jpg|png|gif|webp)$/i);
-    const isVideo = value?.match(/\.(mp4|webm|ogg)$/i);
+    // Helper to extract YouTube video ID
+    const getYouTubeId = (url: string): string | null => {
+        const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]+)/);
+        return match ? match[1] : null;
+    };
+
+    // Helper to extract Vimeo video ID
+    const getVimeoId = (url: string): string | null => {
+        const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+        return match ? match[1] : null;
+    };
+
+    // Detect media type
+    const youtubeId = value ? getYouTubeId(value) : null;
+    const vimeoId = value ? getVimeoId(value) : null;
+    const isEmbedVideo = youtubeId || vimeoId;
+    const isDirectVideo = value?.match(/\.(mp4|webm|ogg)/i);
+    const isVideo = isEmbedVideo || isDirectVideo;
+    // Image is default fallback for any URL that isn't a video
+    const isImage = value && !isVideo;
 
     return (
         <div className={className}>
@@ -105,25 +123,47 @@ export function MediaUploader({
                                 src={value}
                                 alt="Uploaded media"
                                 className="max-w-full max-h-full object-contain"
+                                onError={(e) => {
+                                    // Hide broken images and show fallback
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    target.nextElementSibling?.classList.remove('hidden');
+                                }}
+                            />
+                            <div className="hidden text-center text-slate-500">
+                                <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                                <p className="text-sm">URL Set</p>
+                                <p className="text-xs truncate max-w-48">{value}</p>
+                            </div>
+                        </div>
+                    )}
+                    {youtubeId && (
+                        <div className="aspect-video bg-black">
+                            <iframe
+                                src={`https://www.youtube.com/embed/${youtubeId}`}
+                                className="w-full h-full"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
                             />
                         </div>
                     )}
-                    {isVideo && (
+                    {vimeoId && (
+                        <div className="aspect-video bg-black">
+                            <iframe
+                                src={`https://player.vimeo.com/video/${vimeoId}`}
+                                className="w-full h-full"
+                                allow="autoplay; fullscreen; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </div>
+                    )}
+                    {isDirectVideo && (
                         <div className="aspect-video bg-black">
                             <video
                                 src={value}
                                 controls
                                 className="w-full h-full object-contain"
                             />
-                        </div>
-                    )}
-                    {!isImage && !isVideo && (
-                        <div className="aspect-video bg-slate-100 flex items-center justify-center">
-                            <div className="text-center text-slate-500">
-                                <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                                <p className="text-sm">Media set</p>
-                                <p className="text-xs truncate max-w-48">{value}</p>
-                            </div>
                         </div>
                     )}
                     <button
