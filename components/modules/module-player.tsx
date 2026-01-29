@@ -251,6 +251,19 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                                     />
                                 )}
                             </div>
+                            {currentItem.caption && (
+                                <div className="mt-4 text-sm text-slate-600">
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                            a: ({ node, ...props }) => <a className="text-blue-500 hover:underline" target="_blank" {...props} />
+                                        }}
+                                    >
+                                        {currentItem.caption}
+                                    </ReactMarkdown>
+                                </div>
+                            )}
                         </div>
                     )
                 }
@@ -309,6 +322,19 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                                         </div>
                                     )}
                                 </div>
+                                {currentItem.caption && (
+                                    <div className="mt-4 text-sm text-slate-600">
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                a: ({ node, ...props }) => <a className="text-blue-500 hover:underline" target="_blank" {...props} />
+                                            }}
+                                        >
+                                            {currentItem.caption}
+                                        </ReactMarkdown>
+                                    </div>
+                                )}
                             </div>
                         );
                     })()

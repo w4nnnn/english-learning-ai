@@ -34,6 +34,7 @@ export const moduleItems = sqliteTable('module_items', {
     // Untuk header & material
     title: text('title'),
     content: text('content'), // Rich text / HTML / Markdown
+    caption: text('caption'), // Description for images/videos
 
     // Untuk semua question types
     question: text('question'),

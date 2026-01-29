@@ -279,6 +279,7 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
                 order: items.length + 1,
                 title: type === 'header' ? 'New Section' : null,
                 content: type === 'material' ? '# Enter your content here\n\nStart writing...' : null,
+                caption: null,
                 question: !['header', 'material', 'material_image', 'material_video'].includes(type) ? 'Enter your question here...' : null,
                 correctAnswer: type === 'multiple_choice' || type === 'question_image' || type === 'question_video'
                     ? 'a'

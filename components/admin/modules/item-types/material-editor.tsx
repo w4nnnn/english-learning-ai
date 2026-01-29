@@ -65,6 +65,19 @@ export function MaterialImageEditor({ item, onUpdate }: ItemEditorProps) {
                     accept="image"
                 />
             </div>
+            <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <FileText className="w-4 h-4 text-blue-500" />
+                    Deskripsi (Caption)
+                </label>
+                <RichTextEditor
+                    value={item.caption || ''}
+                    onChange={(value) => onUpdate({ caption: value })}
+                    mode="minimal"
+                    placeholder="Tulis deskripsi gambar..."
+                    height="150px"
+                />
+            </div>
         </div>
     );
 }
@@ -94,6 +107,19 @@ export function MaterialVideoEditor({ item, onUpdate }: ItemEditorProps) {
                     value={item.content || ''}
                     onChange={(url) => onUpdate({ content: url })}
                     accept="video"
+                />
+            </div>
+            <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <FileText className="w-4 h-4 text-blue-500" />
+                    Deskripsi (Caption)
+                </label>
+                <RichTextEditor
+                    value={item.caption || ''}
+                    onChange={(value) => onUpdate({ caption: value })}
+                    mode="minimal"
+                    placeholder="Tulis deskripsi video..."
+                    height="150px"
                 />
             </div>
         </div>
