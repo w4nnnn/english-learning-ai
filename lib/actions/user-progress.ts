@@ -110,3 +110,9 @@ export async function getUserModuleProgress(userId: string, moduleId: string) {
         ))
         .get();
 }
+
+export async function getAllModuleProgress(userId: string) {
+    return await db.select()
+        .from(userModuleProgress)
+        .where(eq(userModuleProgress.userId, userId));
+}

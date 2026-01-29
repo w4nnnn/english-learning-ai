@@ -1,4 +1,5 @@
 import { getModules } from '@/lib/actions/modules';
+import { getAllModuleProgress, getUserProgress } from '@/lib/actions/user-progress';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -15,13 +16,29 @@ export default async function HomePage() {
     redirect('/login');
   }
 
-  const modules = await getModules();
+  // @ts-ignore
+  const userId = session.user.id;
+
+  const [modules, allProgress, userProgress] = await Promise.all([
+    getModules(),
+    getAllModuleProgress(userId),
+    getUserProgress(userId),
+  ]);
+
+  // Create a map of moduleId -> progress
+  const progressMap = new Map(
+    allProgress.map(p => [p.moduleId, p])
+  );
+
+  // Calculate stats
+  const completedModules = allProgress.filter(p => p.status === 'completed').length;
+  const totalXp = userProgress?.xp || 0;
 
   return (
     <div className="min-h-screen bg-gradient-elegant">
       <AppHeader
         userName={session.user.name || 'User'}
-        xp={150}
+        xp={totalXp}
         showXp={true}
       />
 
@@ -62,14 +79,14 @@ export default async function HomePage() {
             <div className="w-12 h-12 bg-gradient-success rounded-xl flex items-center justify-center mx-auto mb-3">
               <Target className="w-6 h-6 text-white" />
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-foreground">0</p>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground">{completedModules}</p>
             <p className="text-sm text-muted-foreground">Completed</p>
           </div>
           <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-elegant border border-border text-center">
             <div className="w-12 h-12 bg-gradient-accent rounded-xl flex items-center justify-center mx-auto mb-3">
               <Trophy className="w-6 h-6 text-white" />
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-foreground">150</p>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground">{totalXp}</p>
             <p className="text-sm text-muted-foreground">Total XP</p>
           </div>
         </div>
@@ -94,45 +111,63 @@ export default async function HomePage() {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {modules.map((module, index) => (
-              <Link
-                key={module.id}
-                href={`/modules/${module.id}`}
-                className="group bg-white rounded-2xl shadow-elegant border border-border p-6 hover-lift"
-              >
-                {/* Module Number Badge */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-primary flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                    {index + 1}
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-elegant" />
-                </div>
+            {modules.map((module, index) => {
+              const progress = progressMap.get(module.id);
+              const totalItems = progress?.totalItems || 1;
+              const completedItems = progress?.completedItems || 0;
+              const progressPercent = Math.round((completedItems / totalItems) * 100);
+              const isCompleted = progress?.status === 'completed';
 
-                {/* Module Info */}
-                <h3 className="font-bold text-lg text-foreground mb-2 group-hover:text-primary transition-elegant">
-                  {module.title}
-                </h3>
-                {module.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                    {module.description}
-                  </p>
-                )}
+              return (
+                <Link
+                  key={module.id}
+                  href={`/modules/${module.id}`}
+                  className="group bg-white rounded-2xl shadow-elegant border border-border p-6 hover-lift"
+                >
+                  {/* Module Number Badge */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg ${isCompleted ? 'bg-gradient-success' : 'bg-gradient-primary'
+                      }`}>
+                      {isCompleted ? (
+                        <Target className="w-7 h-7" />
+                      ) : (
+                        index + 1
+                      )}
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-elegant" />
+                  </div>
 
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium text-foreground">0%</span>
+                  {/* Module Info */}
+                  <h3 className="font-bold text-lg text-foreground mb-2 group-hover:text-primary transition-elegant">
+                    {module.title}
+                  </h3>
+                  {module.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                      {module.description}
+                    </p>
+                  )}
+
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {isCompleted ? 'Completed' : 'Progress'}
+                      </span>
+                      <span className={`font-medium ${isCompleted ? 'text-green-600' : 'text-foreground'}`}>
+                        {progressPercent}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${isCompleted ? 'bg-gradient-success' : 'bg-gradient-primary'
+                          }`}
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-primary rounded-full transition-all duration-500"
-                      style={{ width: '0%' }}
-                    />
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </main>

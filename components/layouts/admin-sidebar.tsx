@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import {
     LayoutDashboard,
     BookOpen,
@@ -12,6 +13,17 @@ import {
     X
 } from 'lucide-react';
 import { useState } from 'react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface AdminSidebarProps {
     userName?: string;
@@ -25,7 +37,13 @@ const navItems = [
 
 export function AdminSidebar({ userName = 'Admin' }: AdminSidebarProps) {
     const pathname = usePathname();
+    const router = useRouter();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+    const handleSignOut = async () => {
+        await signOut({ redirect: false });
+        router.push('/login');
+    };
 
     return (
         <>
@@ -107,13 +125,35 @@ export function AdminSidebar({ userName = 'Admin' }: AdminSidebarProps) {
                             <p className="text-xs text-sidebar-foreground/60">Administrator</p>
                         </div>
                     </div>
-                    <Link
-                        href="/api/auth/signout"
-                        className="flex items-center gap-3 px-4 py-2 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-elegant"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        <span className="text-sm">Sign Out</span>
-                    </Link>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <button
+                                className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-elegant"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                <span className="text-sm">Sign Out</span>
+                            </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                                        <LogOut className="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                    <AlertDialogTitle>Sign Out</AlertDialogTitle>
+                                </div>
+                                <AlertDialogDescription className="pt-2">
+                                    Are you sure you want to sign out? You will need to log in again to access the admin panel.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleSignOut}>
+                                    Sign Out
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </aside>
         </>

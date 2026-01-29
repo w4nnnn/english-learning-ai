@@ -19,7 +19,27 @@ import {
     ChevronUp,
     X,
     Check,
+    BookOpen,
+    Pin,
+    PenLine,
+    MessageCircleQuestion,
+    List,
+    CheckCircle,
+    Star,
+    ImageIcon,
+    AlertTriangle,
 } from 'lucide-react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 // Item type configurations
 const ITEM_TYPES = [
@@ -116,8 +136,6 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
     };
 
     const handleDeleteItem = (itemId: string) => {
-        if (!confirm('Delete this item?')) return;
-
         setItems(items.filter(item => item.id !== itemId));
         startTransition(async () => {
             await deleteModuleItem(itemId);
@@ -143,7 +161,10 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
             {/* Left Column - Module Info */}
             <div className="lg:col-span-1">
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sticky top-6">
-                    <h2 className="font-semibold text-slate-800 mb-4">📚 Module Info</h2>
+                    <h2 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-primary" />
+                        Module Info
+                    </h2>
 
                     <div className="space-y-4">
                         <div>
@@ -246,13 +267,39 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
                                     >
                                         <ChevronDown className="w-4 h-4" />
                                     </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
-                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <button
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                            <AlertDialogHeader>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                                                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                                                    </div>
+                                                    <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                                                </div>
+                                                <AlertDialogDescription className="pt-2">
+                                                    Are you sure you want to delete this item? This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={() => handleDeleteItem(item.id)}
+                                                    className="bg-destructive hover:bg-destructive/90"
+                                                >
+                                                    Delete
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                     <div className={`ml-2 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
                                         <ChevronDown className="w-4 h-4 text-slate-400" />
                                     </div>
@@ -328,8 +375,9 @@ function ItemEditor({
     if (item.type === 'header') {
         return (
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                    📌 Section Title
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <Pin className="w-4 h-4 text-purple-500" />
+                    Section Title
                 </label>
                 <input
                     type="text"
@@ -346,8 +394,9 @@ function ItemEditor({
         return (
             <div className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                        📝 Title (optional)
+                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                        <PenLine className="w-4 h-4 text-blue-500" />
+                        Title (optional)
                     </label>
                     <input
                         type="text"
@@ -358,8 +407,9 @@ function ItemEditor({
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                        📄 Content
+                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                        <FileText className="w-4 h-4 text-blue-500" />
+                        Content
                     </label>
                     <RichTextEditor
                         value={item.content || ''}
@@ -377,8 +427,9 @@ function ItemEditor({
     return (
         <div className="space-y-4">
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                    ❓ Question
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <MessageCircleQuestion className="w-4 h-4 text-green-500" />
+                    Question
                 </label>
                 <RichTextEditor
                     value={item.question || ''}
@@ -414,8 +465,9 @@ function ItemEditor({
 
             <div className="flex items-center gap-4 pt-4 border-t border-slate-200">
                 <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                        ⭐ XP Reward
+                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+                        <Star className="w-4 h-4 text-amber-500" />
+                        XP Reward
                     </label>
                     <input
                         type="number"
@@ -477,8 +529,9 @@ function MultipleChoiceEditor({
 
     return (
         <div className="space-y-3">
-            <label className="block text-sm font-medium text-slate-700">
-                📋 Answer Options
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <List className="w-4 h-4 text-green-500" />
+                Answer Options
             </label>
 
             <div className="space-y-2">
@@ -486,16 +539,16 @@ function MultipleChoiceEditor({
                     <div
                         key={option.id}
                         className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${correctAnswer === option.id
-                                ? 'border-green-500 bg-green-50'
-                                : 'border-slate-200 bg-white hover:border-slate-300'
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
                             }`}
                     >
                         <button
                             type="button"
                             onClick={() => setCorrectAnswer(option.id)}
                             className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${correctAnswer === option.id
-                                    ? 'border-green-500 bg-green-500 text-white'
-                                    : 'border-slate-300 hover:border-green-400'
+                                ? 'border-green-500 bg-green-500 text-white'
+                                : 'border-slate-300 hover:border-green-400'
                                 }`}
                             title="Mark as correct answer"
                         >
@@ -545,8 +598,9 @@ function MultipleChoiceEditor({
             </div>
 
             {!correctAnswer && options.length > 0 && (
-                <p className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
-                    ⚠️ Please select the correct answer by clicking the circle next to an option
+                <p className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Please select the correct answer by clicking the circle next to an option
                 </p>
             )}
         </div>
@@ -579,8 +633,9 @@ function ArrangeWordsEditor({
     return (
         <div className="space-y-4">
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                    🔤 Words to Arrange
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <ListOrdered className="w-4 h-4 text-orange-500" />
+                    Words to Arrange
                 </label>
                 <p className="text-xs text-slate-500 mb-3">
                     Add words that students will arrange into the correct order
@@ -632,8 +687,9 @@ function ArrangeWordsEditor({
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                    ✅ Correct Answer
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Correct Answer
                 </label>
                 <p className="text-xs text-slate-500 mb-2">
                     Enter the words in the correct order (the sentence students should form)
@@ -690,8 +746,9 @@ function SelectImageEditor({
 
     return (
         <div className="space-y-4">
-            <label className="block text-sm font-medium text-slate-700">
-                🖼️ Image Options
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <ImageIcon className="w-4 h-4 text-pink-500" />
+                Image Options
             </label>
 
             {/* Image grid */}
@@ -700,8 +757,8 @@ function SelectImageEditor({
                     <div
                         key={option.id}
                         className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-all ${correctAnswer === option.id
-                                ? 'border-green-500 ring-2 ring-green-200'
-                                : 'border-slate-200 hover:border-slate-300'
+                            ? 'border-green-500 ring-2 ring-green-200'
+                            : 'border-slate-200 hover:border-slate-300'
                             }`}
                         onClick={() => setCorrectAnswer(option.id)}
                     >
@@ -767,8 +824,9 @@ function SelectImageEditor({
             </div>
 
             {!correctAnswer && (options || []).length > 0 && (
-                <p className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
-                    ⚠️ Please click on an image to mark it as the correct answer
+                <p className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Please click on an image to mark it as the correct answer
                 </p>
             )}
         </div>
