@@ -29,6 +29,14 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 // DnD Kit imports
 import {
@@ -214,6 +222,7 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [showPublishDialog, setShowPublishDialog] = useState(false);
 
     // DnD Sensors
     const sensors = useSensors(
@@ -237,13 +246,19 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
         setExpandedItems(newExpanded);
     };
 
-    const handleSaveModule = () => {
+    const handleSaveClick = () => {
+        setShowPublishDialog(true);
+    };
+
+    const handleSaveModule = (shouldPublish: boolean) => {
         startTransition(async () => {
             await updateModule(module.id, {
                 title: moduleInfo.title,
                 description: moduleInfo.description || undefined,
+                isPublished: shouldPublish,
             });
-            toast.success('Module saved!');
+            setShowPublishDialog(false);
+            toast.success(shouldPublish ? 'Module saved & published!' : 'Module saved as draft!');
         });
     };
 
@@ -375,7 +390,7 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
                         </div>
 
                         <button
-                            onClick={handleSaveModule}
+                            onClick={handleSaveClick}
                             disabled={isPending}
                             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                         >
@@ -518,6 +533,40 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
                     )}
                 </div>
             </div>
+
+            {/* Publish Confirmation Dialog */}
+            <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Simpan Module</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda ingin langsung mempublish module ini atau simpan sebagai draft?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex gap-2 sm:gap-0">
+                        <button
+                            onClick={() => setShowPublishDialog(false)}
+                            className="px-4 py-2 text-sm border border-input rounded-lg hover:bg-muted transition-colors"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            onClick={() => handleSaveModule(false)}
+                            disabled={isPending}
+                            className="px-4 py-2 text-sm bg-slate-600 text-white rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors"
+                        >
+                            Simpan sebagai Draft
+                        </button>
+                        <button
+                            onClick={() => handleSaveModule(true)}
+                            disabled={isPending}
+                            className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                        >
+                            Simpan & Publish
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

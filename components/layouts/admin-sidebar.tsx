@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react';
 import {
     LayoutDashboard,
     BookOpen,
-    Settings,
+    Users,
     LogOut,
     ChevronRight,
     Menu,
@@ -32,7 +32,7 @@ interface AdminSidebarProps {
 const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/modules', label: 'Modules', icon: BookOpen },
-    { href: '/admin/settings', label: 'Settings', icon: Settings },
+    { href: '/admin/users', label: 'Users', icon: Users },
 ];
 
 export function AdminSidebar({ userName = 'Admin' }: AdminSidebarProps) {

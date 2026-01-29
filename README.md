@@ -1,4 +1,4 @@
-# 🎓 English Learning AI Platform
+# 🎓 English Learning Platform
 
 *[Baca dalam Bahasa Indonesia](#bahasa-indonesia)*
 
@@ -62,8 +62,8 @@ An interactive gamified platform for learning English with a focus on noun phras
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/w4nnnn/english-learning-ai.git
-   cd english-learning-ai
+   git clone https://github.com/w4nnnn/english-learning.git
+   cd english-learning
    ```
 
 2. **Install dependencies**
@@ -133,7 +133,7 @@ After seeding the database, you can log in with:
 ## 🗂️ Project Structure
 
 ```
-english-learning-ai/
+english-learning/
 ├── app/                      # Next.js app directory
 │   ├── admin/                # Admin panel pages
 │   ├── api/                  # API routes
@@ -210,7 +210,7 @@ npm run start
 ```
 
 ### Deploy to Vercel
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/w4nnnn/english-learning-ai)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/w4nnnn/english-learning)
 
 The easiest way to deploy is using [Vercel Platform](https://vercel.com/new).
 
@@ -293,8 +293,8 @@ Platform pembelajaran Bahasa Inggris interaktif dengan sistem gamifikasi yang be
 
 1. **Clone repository**
    ```bash
-   git clone https://github.com/w4nnnn/english-learning-ai.git
-   cd english-learning-ai
+   git clone https://github.com/w4nnnn/english-learning.git
+   cd english-learning
    ```
 
 2. **Install dependencies**
@@ -364,7 +364,7 @@ Setelah seeding database, Anda bisa login dengan:
 ## 🗂️ Struktur Project
 
 ```
-english-learning-ai/
+english-learning/
 ├── app/                      # Direktori app Next.js
 │   ├── admin/                # Halaman panel admin
 │   ├── api/                  # Route API
@@ -441,7 +441,7 @@ npm run start
 ```
 
 ### Deploy ke Vercel
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/w4nnnn/english-learning-ai)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/w4nnnn/english-learning)
 
 Cara termudah untuk deploy adalah menggunakan [Vercel Platform](https://vercel.com/new).
 
