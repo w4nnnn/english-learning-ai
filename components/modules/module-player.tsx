@@ -67,7 +67,8 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
     const handleCheck = async () => {
         if (!currentItem) return;
 
-        if (['header', 'material'].includes(currentItem.type)) {
+        // Content types that don't need answer checking
+        if (['header', 'material', 'material_image', 'material_video'].includes(currentItem.type)) {
             handleNext();
             return;
         }
@@ -187,8 +188,49 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                     </div>
                 )}
 
+                {/* Material Image Type */}
+                {currentItem.type === 'material_image' && (
+                    <div className="flex-1">
+                        {currentItem.title && (
+                            <h2 className="text-2xl font-bold text-foreground mb-6">
+                                {currentItem.title}
+                            </h2>
+                        )}
+                        <div className="bg-white rounded-2xl shadow-elegant border border-border overflow-hidden">
+                            {currentItem.content && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={currentItem.content}
+                                    alt={currentItem.title || 'Material'}
+                                    className="w-full h-auto"
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Material Video Type */}
+                {currentItem.type === 'material_video' && (
+                    <div className="flex-1">
+                        {currentItem.title && (
+                            <h2 className="text-2xl font-bold text-foreground mb-6">
+                                {currentItem.title}
+                            </h2>
+                        )}
+                        <div className="bg-black rounded-2xl shadow-elegant overflow-hidden">
+                            {currentItem.content && (
+                                <video
+                                    src={currentItem.content}
+                                    controls
+                                    className="w-full h-auto"
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Question Types */}
-                {!['header', 'material'].includes(currentItem.type) && (
+                {!['header', 'material', 'material_image', 'material_video'].includes(currentItem.type) && (
                     <div className="flex-1 space-y-8">
                         <div className="text-center">
                             <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
@@ -227,6 +269,62 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                                     onSelect={(id) => setUserAnswer(id)}
                                     disabled={status !== 'idle'}
                                 />
+                            )}
+
+                            {/* MC Image - same as select_image UI */}
+                            {currentItem.type === 'mc_image' && (
+                                <ImageSelect
+                                    key={currentItem.id}
+                                    options={Array.isArray(currentItem.options) ? currentItem.options : []}
+                                    selectedOptionId={userAnswer}
+                                    onSelect={(id) => setUserAnswer(id)}
+                                    disabled={status !== 'idle'}
+                                />
+                            )}
+
+                            {/* Question Image - show image then options */}
+                            {currentItem.type === 'question_image' && (
+                                <div className="space-y-4">
+                                    {currentItem.content && (
+                                        <div className="rounded-xl overflow-hidden border border-border">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={currentItem.content}
+                                                alt="Question"
+                                                className="w-full h-auto max-h-64 object-contain bg-slate-100"
+                                            />
+                                        </div>
+                                    )}
+                                    <MultipleChoice
+                                        key={currentItem.id}
+                                        options={Array.isArray(currentItem.options) ? currentItem.options : []}
+                                        selectedOptionId={userAnswer}
+                                        onSelect={(id) => setUserAnswer(id)}
+                                        disabled={status !== 'idle'}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Question Video - show video then options */}
+                            {currentItem.type === 'question_video' && (
+                                <div className="space-y-4">
+                                    {currentItem.content && (
+                                        <div className="rounded-xl overflow-hidden bg-black">
+                                            <video
+                                                src={currentItem.content}
+                                                controls
+                                                className="w-full h-auto max-h-64"
+                                            />
+                                        </div>
+                                    )}
+                                    <MultipleChoice
+                                        key={currentItem.id}
+                                        options={Array.isArray(currentItem.options) ? currentItem.options : []}
+                                        selectedOptionId={userAnswer}
+                                        onSelect={(id) => setUserAnswer(id)}
+                                        disabled={status !== 'idle'}
+                                    />
+                                </div>
                             )}
                         </div>
                     </div>
