@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { ArrowLeft, Heart, Zap, CheckCircle, X, ChevronRight, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { WordOrdering } from '@/components/question-types/word-ordering';
 import { MultipleChoice } from '@/components/question-types/multiple-choice';
 import { ImageSelect } from '@/components/question-types/image-select';
@@ -176,125 +178,124 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                             {currentItem.title}
                         </h2>
                         <div className="bg-white rounded-2xl p-8 shadow-elegant border border-border">
-                            <div
-                                className="prose prose-slate max-w-none"
-                                dangerouslySetInnerHTML={{
-                                    __html: (currentItem.content || '')
-                                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                        .replace(/\n/g, '<br/>')
-                                }}
-                            />
+                            <div>
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        h1: ({ node, ...props }: any) => <h1 className="text-2xl font-bold text-foreground mb-4 mt-6 first:mt-0" {...props} />,
+                                        h2: ({ node, ...props }: any) => <h2 className="text-xl font-semibold text-foreground mb-3 mt-5 first:mt-0" {...props} />,
+                                        h3: ({ node, ...props }: any) => <h3 className="text-lg font-medium text-foreground mb-2 mt-4" {...props} />,
+                                        p: ({ node, ...props }: any) => <p className="text-base text-slate-700 mb-4 leading-relaxed" {...props} />,
+                                        ul: ({ node, ...props }: any) => <ul className="list-disc list-inside mb-4 space-y-1 text-slate-700" {...props} />,
+                                        ol: ({ node, ...props }: any) => <ol className="list-decimal list-inside mb-4 space-y-1 text-slate-700" {...props} />,
+                                        li: ({ node, ...props }: any) => <li className="pl-1" {...props} />,
+                                        blockquote: ({ node, ...props }: any) => (
+                                            <blockquote className="border-l-4 border-primary/30 pl-4 py-1 my-4 bg-slate-50 italic text-slate-600 rounded-r" {...props} />
+                                        ),
+                                        a: ({ node, ...props }: any) => (
+                                            <a className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+                                        ),
+                                        code: ({ node, className, children, ...props }: any) => {
+                                            const match = /language-(\w+)/.exec(className || '');
+                                            const isInline = !match && !String(children).includes('\n');
+                                            return isInline ? (
+                                                <code className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded text-sm font-mono border border-slate-200" {...props}>
+                                                    {children}
+                                                </code>
+                                            ) : (
+                                                <code className="block bg-slate-900 text-slate-50 p-4 rounded-lg text-sm font-mono overflow-x-auto my-4 shadow-sm" {...props}>
+                                                    {children}
+                                                </code>
+                                            );
+                                        },
+                                        img: ({ node, ...props }: any) => (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img className="rounded-xl border border-border shadow-sm my-4 max-w-full h-auto" {...props} alt={props.alt || ''} />
+                                        ),
+                                        table: ({ node, ...props }: any) => <div className="overflow-x-auto my-6 rounded-lg border border-border"><table className="w-full text-sm text-left" {...props} /></div>,
+                                        thead: ({ node, ...props }: any) => <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold" {...props} />,
+                                        tbody: ({ node, ...props }: any) => <tbody className="divide-y divide-border" {...props} />,
+                                        tr: ({ node, ...props }: any) => <tr className="bg-white hover:bg-slate-50 transition-colors" {...props} />,
+                                        th: ({ node, ...props }: any) => <th className="px-6 py-3 whitespace-nowrap" {...props} />,
+                                        td: ({ node, ...props }: any) => <td className="px-6 py-4" {...props} />,
+                                    }}
+                                >
+                                    {currentItem.content || ''}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {/* Material Image Type */}
-                {currentItem.type === 'material_image' && (
-                    <div className="flex-1">
-                        {currentItem.title && (
-                            <h2 className="text-2xl font-bold text-foreground mb-6">
-                                {currentItem.title}
-                            </h2>
-                        )}
-                        <div className="bg-white rounded-2xl shadow-elegant border border-border overflow-hidden">
-                            {currentItem.content && (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                    src={currentItem.content}
-                                    alt={currentItem.title || 'Material'}
-                                    className="w-full h-auto"
-                                />
+                {
+                    currentItem.type === 'material_image' && (
+                        <div className="flex-1">
+                            {currentItem.title && (
+                                <h2 className="text-2xl font-bold text-foreground mb-6">
+                                    {currentItem.title}
+                                </h2>
                             )}
+                            <div className="bg-white rounded-2xl shadow-elegant border border-border overflow-hidden">
+                                {currentItem.content && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                        src={currentItem.content}
+                                        alt={currentItem.title || 'Material'}
+                                        className="w-full h-auto"
+                                    />
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
                 {/* Material Video Type */}
-                {currentItem.type === 'material_video' && (
-                    <div className="flex-1">
-                        {currentItem.title && (
-                            <h2 className="text-2xl font-bold text-foreground mb-6">
-                                {currentItem.title}
-                            </h2>
-                        )}
-                        <div className="bg-black rounded-2xl shadow-elegant overflow-hidden">
-                            {currentItem.content && (
-                                <video
-                                    src={currentItem.content}
-                                    controls
-                                    className="w-full h-auto"
-                                />
+                {
+                    currentItem.type === 'material_video' && (
+                        <div className="flex-1">
+                            {currentItem.title && (
+                                <h2 className="text-2xl font-bold text-foreground mb-6">
+                                    {currentItem.title}
+                                </h2>
                             )}
+                            <div className="bg-black rounded-2xl shadow-elegant overflow-hidden">
+                                {currentItem.content && (
+                                    <video
+                                        src={currentItem.content}
+                                        controls
+                                        className="w-full h-auto"
+                                    />
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
                 {/* Question Types */}
-                {!['header', 'material', 'material_image', 'material_video'].includes(currentItem.type) && (
-                    <div className="flex-1 space-y-8">
-                        <div className="text-center">
-                            <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
-                                Pertanyaan {currentIndex + 1} dari {totalItems}
-                            </span>
-                            <h2 className="text-2xl font-bold text-foreground">
-                                {currentItem.question}
-                            </h2>
-                        </div>
+                {
+                    !['header', 'material', 'material_image', 'material_video'].includes(currentItem.type) && (
+                        <div className="flex-1 space-y-8">
+                            <div className="text-center">
+                                <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+                                    Pertanyaan {currentIndex + 1} dari {totalItems}
+                                </span>
+                                <h2 className="text-2xl font-bold text-foreground">
+                                    {currentItem.question}
+                                </h2>
+                            </div>
 
-                        <div className="bg-white rounded-2xl p-6 shadow-elegant border border-border">
-                            {currentItem.type === 'arrange_words' && (
-                                <WordOrdering
-                                    key={currentItem.id}
-                                    initialWords={Array.isArray(currentItem.options) ? currentItem.options : []}
-                                    onOrderChange={handleOrderChange}
-                                    disabled={status !== 'idle'}
-                                />
-                            )}
+                            <div className="bg-white rounded-2xl p-6 shadow-elegant border border-border">
+                                {currentItem.type === 'arrange_words' && (
+                                    <WordOrdering
+                                        key={currentItem.id}
+                                        initialWords={Array.isArray(currentItem.options) ? currentItem.options : []}
+                                        onOrderChange={handleOrderChange}
+                                        disabled={status !== 'idle'}
+                                    />
+                                )}
 
-                            {currentItem.type === 'multiple_choice' && (
-                                <MultipleChoice
-                                    key={currentItem.id}
-                                    options={Array.isArray(currentItem.options) ? currentItem.options : []}
-                                    selectedOptionId={userAnswer}
-                                    onSelect={(id) => setUserAnswer(id)}
-                                    disabled={status !== 'idle'}
-                                />
-                            )}
-
-                            {currentItem.type === 'select_image' && (
-                                <ImageSelect
-                                    key={currentItem.id}
-                                    options={Array.isArray(currentItem.options) ? currentItem.options : []}
-                                    selectedOptionId={userAnswer}
-                                    onSelect={(id) => setUserAnswer(id)}
-                                    disabled={status !== 'idle'}
-                                />
-                            )}
-
-                            {/* MC Image - same as select_image UI */}
-                            {currentItem.type === 'mc_image' && (
-                                <ImageSelect
-                                    key={currentItem.id}
-                                    options={Array.isArray(currentItem.options) ? currentItem.options : []}
-                                    selectedOptionId={userAnswer}
-                                    onSelect={(id) => setUserAnswer(id)}
-                                    disabled={status !== 'idle'}
-                                />
-                            )}
-
-                            {/* Question Image - show image then options */}
-                            {currentItem.type === 'question_image' && (
-                                <div className="space-y-4">
-                                    {currentItem.content && (
-                                        <div className="rounded-xl overflow-hidden border border-border">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={currentItem.content}
-                                                alt="Question"
-                                                className="w-full h-auto max-h-64 object-contain bg-slate-100"
-                                            />
-                                        </div>
-                                    )}
+                                {currentItem.type === 'multiple_choice' && (
                                     <MultipleChoice
                                         key={currentItem.id}
                                         options={Array.isArray(currentItem.options) ? currentItem.options : []}
@@ -302,37 +303,81 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                                         onSelect={(id) => setUserAnswer(id)}
                                         disabled={status !== 'idle'}
                                     />
-                                </div>
-                            )}
+                                )}
 
-                            {/* Question Video - show video then options */}
-                            {currentItem.type === 'question_video' && (
-                                <div className="space-y-4">
-                                    {currentItem.content && (
-                                        <div className="rounded-xl overflow-hidden bg-black">
-                                            <video
-                                                src={currentItem.content}
-                                                controls
-                                                className="w-full h-auto max-h-64"
-                                            />
-                                        </div>
-                                    )}
-                                    <MultipleChoice
+                                {currentItem.type === 'select_image' && (
+                                    <ImageSelect
                                         key={currentItem.id}
                                         options={Array.isArray(currentItem.options) ? currentItem.options : []}
                                         selectedOptionId={userAnswer}
                                         onSelect={(id) => setUserAnswer(id)}
                                         disabled={status !== 'idle'}
                                     />
-                                </div>
-                            )}
+                                )}
+
+                                {/* MC Image - same as select_image UI */}
+                                {currentItem.type === 'mc_image' && (
+                                    <ImageSelect
+                                        key={currentItem.id}
+                                        options={Array.isArray(currentItem.options) ? currentItem.options : []}
+                                        selectedOptionId={userAnswer}
+                                        onSelect={(id) => setUserAnswer(id)}
+                                        disabled={status !== 'idle'}
+                                    />
+                                )}
+
+                                {/* Question Image - show image then options */}
+                                {currentItem.type === 'question_image' && (
+                                    <div className="space-y-4">
+                                        {currentItem.content && (
+                                            <div className="rounded-xl overflow-hidden border border-border">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={currentItem.content}
+                                                    alt="Question"
+                                                    className="w-full h-auto max-h-64 object-contain bg-slate-100"
+                                                />
+                                            </div>
+                                        )}
+                                        <MultipleChoice
+                                            key={currentItem.id}
+                                            options={Array.isArray(currentItem.options) ? currentItem.options : []}
+                                            selectedOptionId={userAnswer}
+                                            onSelect={(id) => setUserAnswer(id)}
+                                            disabled={status !== 'idle'}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Question Video - show video then options */}
+                                {currentItem.type === 'question_video' && (
+                                    <div className="space-y-4">
+                                        {currentItem.content && (
+                                            <div className="rounded-xl overflow-hidden bg-black">
+                                                <video
+                                                    src={currentItem.content}
+                                                    controls
+                                                    className="w-full h-auto max-h-64"
+                                                />
+                                            </div>
+                                        )}
+                                        <MultipleChoice
+                                            key={currentItem.id}
+                                            options={Array.isArray(currentItem.options) ? currentItem.options : []}
+                                            selectedOptionId={userAnswer}
+                                            onSelect={(id) => setUserAnswer(id)}
+                                            disabled={status !== 'idle'}
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
-            </main>
+                    )
+                }
+            </main >
 
             {/* Footer */}
-            <footer className="sticky bottom-0 bg-white/90 backdrop-blur-xl border-t border-border px-4 py-4">
+            < footer className="sticky bottom-0 bg-white/90 backdrop-blur-xl border-t border-border px-4 py-4" >
                 <div className="max-w-2xl mx-auto">
                     {/* Feedback Messages */}
                     {status === 'correct' && (
@@ -386,7 +431,7 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
-            </footer>
-        </div>
+            </footer >
+        </div >
     );
 }
