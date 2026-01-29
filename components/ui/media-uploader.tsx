@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon, Video, CheckCircle } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon, Video, CheckCircle, Link as LinkIcon } from 'lucide-react';
 import { uploadMedia } from '@/lib/actions/upload-media';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface MediaUploaderProps {
     value?: string;
@@ -120,7 +121,7 @@ export function MediaUploader({
                         <div className="aspect-video bg-slate-100 flex items-center justify-center">
                             <div className="text-center text-slate-500">
                                 <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                                <p className="text-sm">File uploaded</p>
+                                <p className="text-sm">Media set</p>
                                 <p className="text-xs truncate max-w-48">{value}</p>
                             </div>
                         </div>
@@ -133,60 +134,118 @@ export function MediaUploader({
                     >
                         <X className="w-4 h-4" />
                     </button>
+                    {/* Show URL for reference */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-2 py-1 truncate">
+                        {value}
+                    </div>
                 </div>
             ) : (
-                <div
-                    onClick={() => inputRef.current?.click()}
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    className={`
-                        relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-                        transition-all duration-200
-                        ${isDragging
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'
-                        }
-                        ${isUploading ? 'pointer-events-none opacity-50' : ''}
-                    `}
-                >
-                    <input
-                        ref={inputRef}
-                        type="file"
-                        accept={acceptTypes}
-                        onChange={handleFileChange}
-                        className="hidden"
-                    />
+                <Tabs defaultValue="upload" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-2">
+                        <TabsTrigger value="upload">Upload File</TabsTrigger>
+                        <TabsTrigger value="link">Link URL</TabsTrigger>
+                    </TabsList>
 
-                    {isUploading ? (
-                        <div className="flex flex-col items-center gap-2">
-                            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                            <p className="text-sm text-slate-600">Uploading...</p>
+                    <TabsContent value="upload" className="mt-0">
+                        <div
+                            onClick={() => inputRef.current?.click()}
+                            onDrop={handleDrop}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            className={`
+                                relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer min-h-[200px] flex flex-col justify-center
+                                transition-all duration-200
+                                ${isDragging
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'
+                                }
+                                ${isUploading ? 'pointer-events-none opacity-50' : ''}
+                            `}
+                        >
+                            <input
+                                ref={inputRef}
+                                type="file"
+                                accept={acceptTypes}
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
+
+                            {isUploading ? (
+                                <div className="flex flex-col items-center gap-2">
+                                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                                    <p className="text-sm text-slate-600">Uploading...</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="flex gap-2">
+                                        {(accept === 'image' || accept === 'both') && (
+                                            <ImageIcon className="w-6 h-6 text-slate-400" />
+                                        )}
+                                        {(accept === 'video' || accept === 'both') && (
+                                            <Video className="w-6 h-6 text-slate-400" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-slate-700">
+                                            Drop {accept === 'both' ? 'file' : accept} here or click to upload
+                                        </p>
+                                        <p className="text-sm text-slate-500 mt-1">
+                                            {accept === 'image' && 'JPEG, PNG, GIF, WebP up to 50MB'}
+                                            {accept === 'video' && 'MP4, WebM, OGG up to 50MB'}
+                                            {accept === 'both' && 'Images & Videos up to 50MB'}
+                                        </p>
+                                    </div>
+                                    <Upload className="w-5 h-5 text-slate-400" />
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="flex gap-2">
-                                {(accept === 'image' || accept === 'both') && (
-                                    <ImageIcon className="w-6 h-6 text-slate-400" />
-                                )}
-                                {(accept === 'video' || accept === 'both') && (
-                                    <Video className="w-6 h-6 text-slate-400" />
-                                )}
+                    </TabsContent>
+
+                    <TabsContent value="link" className="mt-0">
+                        <div className="border rounded-lg p-6 bg-slate-50 min-h-[200px] flex flex-col justify-center">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Paste Image/Video URL
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="url"
+                                            placeholder="https://example.com/image.jpg"
+                                            className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const url = e.currentTarget.value;
+                                                    if (url) onChange(url);
+                                                }
+                                            }}
+                                            onBlur={(e) => {
+                                                // Optional: auto-save on blur if value exists
+                                                // const url = e.target.value;
+                                                // if (url) onChange(url);
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                                                if (input.value) onChange(input.value);
+                                            }}
+                                            className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-slate-500">
+                                        Supports direct links to images (jpg, png) or videos (mp4).
+                                        Note: Some external links may not preview correctly.
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="font-medium text-slate-700">
-                                    Drop {accept === 'both' ? 'file' : accept} here or click to upload
-                                </p>
-                                <p className="text-sm text-slate-500 mt-1">
-                                    {accept === 'image' && 'JPEG, PNG, GIF, WebP up to 50MB'}
-                                    {accept === 'video' && 'MP4, WebM, OGG up to 50MB'}
-                                    {accept === 'both' && 'Images & Videos up to 50MB'}
-                                </p>
-                            </div>
-                            <Upload className="w-5 h-5 text-slate-400" />
                         </div>
-                    )}
-                </div>
+                    </TabsContent>
+                </Tabs>
             )}
 
             {error && (
