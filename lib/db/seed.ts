@@ -7,99 +7,174 @@ import { eq } from 'drizzle-orm';
 
 const SAMPLE_MODULES = [
     {
-        id: 'module-1',
-        title: 'Noun Phrase - Pengenalan',
-        description: 'Pelajari dasar-dasar Noun Phrase (Frasa Kata Benda) dalam bahasa Inggris.',
+        id: 'module-np-1',
+        title: 'Noun Phrase 1: Basics',
+        description: 'Pengenalan dasar Noun Phrase (Frasa Kata Benda) dan komponen utamanya.',
         order: 1,
         isPublished: true,
     },
     {
-        id: 'module-2',
-        title: 'Noun Phrase - Intermediate',
-        description: 'Materi lanjutan tentang Noun Phrase dengan contoh lebih kompleks.',
+        id: 'module-np-2',
+        title: 'Noun Phrase 2: Structure',
+        description: 'Memahami sruktur Pre-modifier dan Post-modifier dalam Noun Phrase.',
         order: 2,
-        isPublished: false,
+        isPublished: true,
+    },
+    {
+        id: 'module-np-3',
+        title: 'Noun Phrase 3: Advanced Practice',
+        description: 'Latihan intensif menyusun dan mengidentifikasi Noun Phrase yang kompleks.',
+        order: 3,
+        isPublished: true,
     },
 ];
 
 const SAMPLE_MODULE_ITEMS = [
-    // Module 1 Items
+    // --- Module 1: Basics ---
     {
         id: 'item-1-1',
-        moduleId: 'module-1',
+        moduleId: 'module-np-1',
         type: 'header',
         order: 1,
-        title: 'Bagian 1: Apa itu Noun Phrase?',
+        title: 'Introduction to Noun Phrase',
     },
     {
         id: 'item-1-2',
-        moduleId: 'module-1',
+        moduleId: 'module-np-1',
         type: 'material',
         order: 2,
-        title: 'Pengenalan Noun Phrase',
-        content: `**Noun Phrase** adalah frasa yang terdiri dari kata benda (noun) sebagai inti dan kata-kata lain yang memodifikasinya.
+        title: 'Apa itu Noun Phrase?',
+        content: `**Noun Phrase (NP)** adalah kelompok kata yang bekerja sama sebagai kata benda. Inti dari frasa ini adalah **Head Noun** (Kata Benda Utama).
 
-Rumus dasar:
-- **Determiner** (a, the, this, those, two, dll)
-- **Adjective** (big, red, beautiful, dll)
-- **Noun** (car, house, book, dll)
+**Contoh Sederhana:**
+1. **The cat** (Determiner + Noun)
+2. **A red car** (Determiner + Adjective + Noun)
+3. **My old book** (Possessive + Adjective + Noun)
 
-Contoh: "A beautiful house" = Det + Adj + Noun`,
+Rumus Basic:
+**Determiner + Adjective + Head Noun**`,
     },
     {
         id: 'item-1-3',
-        moduleId: 'module-1',
+        moduleId: 'module-np-1',
         type: 'multiple_choice',
         order: 3,
-        question: 'Manakah yang merupakan Noun Phrase (Frasa Kata Benda)?',
+        question: 'Manakah yang merupakan "Head Noun" dari frasa: "The big yellow bus"?',
         options: [
-            { id: 'a', label: 'Run fast', isCorrect: false },
-            { id: 'b', label: 'A big house', isCorrect: true },
-            { id: 'c', label: 'Very quickly', isCorrect: false },
+            { id: 'a', label: 'The', isCorrect: false },
+            { id: 'b', label: 'big', isCorrect: false },
+            { id: 'c', label: 'yellow', isCorrect: false },
+            { id: 'd', label: 'bus', isCorrect: true },
         ],
-        correctAnswer: 'b',
+        correctAnswer: 'd',
         xpReward: 10,
     },
     {
         id: 'item-1-4',
-        moduleId: 'module-1',
+        moduleId: 'module-np-1',
         type: 'arrange_words',
         order: 4,
-        question: 'Susunlah menjadi frasa yang benar: "Sebuah mobil merah"',
-        options: ['car', 'A', 'red', 'blue', 'run'],
-        correctAnswer: 'A red car',
+        question: 'Susunlah menjadi Noun Phrase yang benar: "Ekor panjang itu"',
+        options: ['tail', 'long', 'That'],
+        correctAnswer: 'That long tail',
         xpReward: 15,
     },
     {
         id: 'item-1-5',
-        moduleId: 'module-1',
-        type: 'header',
+        moduleId: 'module-np-1',
+        type: 'select_image',
         order: 5,
-        title: 'Bagian 2: Latihan',
-    },
-    {
-        id: 'item-1-6',
-        moduleId: 'module-1',
-        type: 'arrange_words',
-        order: 6,
-        question: 'Terjemahkan: "Dua buku lama"',
-        options: ['books', 'Two', 'old', 'new', 'apple'],
-        correctAnswer: 'Two old books',
-        xpReward: 15,
-    },
-    {
-        id: 'item-1-7',
-        moduleId: 'module-1',
-        type: 'multiple_choice',
-        order: 7,
-        question: 'Lengkapi frasa ini: "___ beautiful flower"',
+        question: 'Pilih gambar yang sesuai dengan frasa: "A delicious pizza"',
         options: [
-            { id: 'a', label: 'A', isCorrect: true },
-            { id: 'b', label: 'An', isCorrect: false },
-            { id: 'c', label: 'Of', isCorrect: false },
+            { id: 'a', imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400', label: 'Pizza' },
+            { id: 'b', imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400', label: 'Pancake' },
+            { id: 'c', imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', label: 'Burger' },
         ],
         correctAnswer: 'a',
         xpReward: 10,
+    },
+
+    // --- Module 2: Structure (Modifiers) ---
+    {
+        id: 'item-2-1',
+        moduleId: 'module-np-2',
+        type: 'header',
+        order: 1,
+        title: 'Pre-modifiers & Post-modifiers',
+    },
+    {
+        id: 'item-2-2',
+        moduleId: 'module-np-2',
+        type: 'material',
+        order: 2,
+        title: 'Posisi Modifier',
+        content: `Noun Phrase bisa menjadi panjang karena adanya **Modifiers** (penjelas).
+
+1. **Pre-modifiers** (Sebelum Noun):
+   - Adjectives: *smart* student
+   - Nouns (sebagai adj): *school* bus
+   - Participles: *sleeping* baby
+
+2. **Post-modifiers** (Setelah Noun):
+   - Prepositional Phrase: The man *in the room*
+   - Relative Clause: The girl *who likes cookies*`,
+    },
+    {
+        id: 'item-2-3',
+        moduleId: 'module-np-2',
+        type: 'multiple_choice',
+        order: 3,
+        question: 'Identifikasi Post-modifier dalam kalimat: "The book on the table"',
+        options: [
+            { id: 'a', label: 'The book', isCorrect: false },
+            { id: 'b', label: 'on the table', isCorrect: true },
+            { id: 'c', label: 'The', isCorrect: false },
+        ],
+        correctAnswer: 'b',
+        xpReward: 15,
+    },
+    {
+        id: 'item-2-4',
+        moduleId: 'module-np-2',
+        type: 'arrange_words',
+        order: 4,
+        question: 'Susun frasa dengan Noun Modifier: "Sebuah toko sepatu"',
+        options: ['shop', 'A', 'shoe'],
+        correctAnswer: 'A shoe shop',
+        xpReward: 15,
+    },
+
+    // --- Module 3: Practice ---
+    {
+        id: 'item-3-1',
+        moduleId: 'module-np-3',
+        type: 'header',
+        order: 1,
+        title: 'Challenge Yourself!',
+    },
+    {
+        id: 'item-3-2',
+        moduleId: 'module-np-3',
+        type: 'arrange_words',
+        order: 2,
+        question: 'Complex NP: "Gadis cantik yang berbaju merah itu"',
+        options: ['girl', 'beautiful', 'The', 'red', 'in', 'dress'],
+        correctAnswer: 'The beautiful girl in red dress',
+        xpReward: 25,
+    },
+    {
+        id: 'item-3-3',
+        moduleId: 'module-np-3',
+        type: 'multiple_choice',
+        order: 3,
+        question: 'Mana susunan yang BENAR (Order of Adjectives)?',
+        options: [
+            { id: 'a', label: 'A red big car', isCorrect: false },
+            { id: 'b', label: 'A big red car', isCorrect: true },
+            { id: 'c', label: 'Red a big car', isCorrect: false },
+        ],
+        correctAnswer: 'b',
+        xpReward: 20,
     },
 ];
 

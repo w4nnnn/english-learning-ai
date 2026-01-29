@@ -28,7 +28,6 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
     const [userAnswer, setUserAnswer] = useState<any>(null);
     const [hearts, setHearts] = useState(5);
     const [xp, setXp] = useState(0);
-    const [completedItems, setCompletedItems] = useState(initialProgress?.completedItems ?? 0);
 
     const items = module.items;
     const currentItem = items[currentIndex];
@@ -41,19 +40,23 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
             saveUserProgress(userId, { heartCount: hearts, xp });
             updateModuleProgress(userId, module.id, {
                 currentItemIndex: currentIndex,
-                completedItems,
                 status: currentIndex >= items.length - 1 ? 'completed' : 'in_progress',
             });
         }, 1000);
         return () => clearTimeout(timer);
-    }, [currentIndex, hearts, xp, completedItems, userId, module.id, items.length]);
+    }, [currentIndex, hearts, xp, userId, module.id, items.length]);
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentIndex < items.length - 1) {
             setCurrentIndex(currentIndex + 1);
             setStatus('idle');
             setUserAnswer(null);
         } else {
+            // Finish
+            await updateModuleProgress(userId, module.id, {
+                currentItemIndex: currentIndex,
+                status: 'completed'
+            });
             toast.success('🎉 Modul selesai!', {
                 description: `Kamu mendapat ${xp} XP`,
             });
@@ -61,7 +64,7 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
         }
     };
 
-    const handleCheck = () => {
+    const handleCheck = async () => {
         if (!currentItem) return;
 
         if (['header', 'material'].includes(currentItem.type)) {
@@ -77,7 +80,6 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
             if (isCorrect) {
                 setStatus('correct');
                 setXp(xp + (currentItem.xpReward || 10));
-                setCompletedItems(completedItems + 1);
                 toast.success('Benar! 🎉', { duration: 2000 });
             } else {
                 setStatus('wrong');
@@ -88,7 +90,14 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                 });
             }
 
-            saveItemResponse(userId, module.id, currentItem.id, userAnswer, isCorrect);
+            // Save response and force progress update if correct
+            await saveItemResponse(userId, module.id, currentItem.id, userAnswer, isCorrect);
+            if (isCorrect) {
+                await updateModuleProgress(userId, module.id, {
+                    currentItemIndex: currentIndex,
+                    status: 'in_progress'
+                });
+            }
         } else {
             handleNext();
         }
