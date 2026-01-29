@@ -1,6 +1,6 @@
 import { getModules } from '@/lib/actions/modules';
 import Link from 'next/link';
-import { BarChart3, BookOpen, Plus, TrendingUp, Users } from 'lucide-react';
+import { BarChart3, BookOpen, Plus, TrendingUp, Users, CheckCircle2, FileText } from 'lucide-react';
 
 export default async function AdminDashboard() {
     const modules = await getModules(true);
@@ -117,9 +117,19 @@ export default async function AdminDashboard() {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="font-medium text-foreground truncate">{module.title}</p>
-                                <p className="text-sm text-muted-foreground">
-                                    {module.isPublished ? '🟢 Published' : '🟡 Draft'}
-                                </p>
+                                <div className="flex items-center gap-1.5">
+                                    {module.isPublished ? (
+                                        <>
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                                            <span className="text-green-600">Published</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileText className="w-3.5 h-3.5 text-amber-600" />
+                                            <span className="text-amber-600">Draft</span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </Link>
                     ))}

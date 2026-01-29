@@ -85,8 +85,8 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                 setStatus('wrong');
                 setHearts(Math.max(0, hearts - 1));
                 toast.error('Salah', {
-                    description: `Jawaban yang benar: ${currentItem.correctAnswer}`,
-                    duration: 3000,
+                    description: 'Semangat! Coba lagi.',
+                    duration: 2000,
                 });
             }
 
@@ -256,7 +256,7 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                             </div>
                             <div>
                                 <p className="font-bold text-red-700">Salah</p>
-                                <p className="text-sm text-red-600">Jawaban: {currentItem.correctAnswer}</p>
+                                <p className="text-sm text-red-600">Coba lagi!</p>
                             </div>
                         </div>
                     )}
