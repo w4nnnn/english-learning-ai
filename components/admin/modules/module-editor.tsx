@@ -30,6 +30,27 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
+// DnD Kit imports
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+    DragOverlay,
+    DragStartEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 // Import item type components
 import { ITEM_TYPES, getItemTypeConfig } from './item-types';
 import { HeaderEditor } from './item-types/header-editor';
@@ -44,6 +65,145 @@ interface ModuleEditorProps {
     module: Module & { items: ModuleItem[] };
 }
 
+// Sortable Item Wrapper Component
+function SortableModuleItem({
+    item,
+    isExpanded,
+    onToggleExpand,
+    onDelete,
+    onUpdate,
+    children,
+}: {
+    item: ModuleItem;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
+    onDelete: () => void;
+    onUpdate: (data: Partial<ModuleItem>) => void;
+    children: React.ReactNode;
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: item.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 1000 : 'auto',
+    };
+
+    const typeConfig = getItemTypeConfig(item.type);
+    const Icon = typeConfig?.icon || FileText;
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style as React.CSSProperties}
+            className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden transition-all ${isExpanded ? 'border-blue-300' : 'border-slate-200'} ${isDragging ? 'shadow-xl' : ''}`}
+        >
+            {/* Item Header */}
+            <div
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={onToggleExpand}
+            >
+                {/* Drag Handle */}
+                <button
+                    {...attributes}
+                    {...listeners}
+                    className="p-1 hover:bg-slate-100 rounded cursor-grab active:cursor-grabbing touch-none"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Drag to reorder"
+                >
+                    <GripVertical className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <div className={`p-2 rounded-lg ${typeConfig?.color || 'bg-slate-100'}`}>
+                    <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-800 truncate">
+                        {item.title || item.question || `${typeConfig?.label} Item`}
+                    </p>
+                    <p className="text-xs text-slate-500">{typeConfig?.label}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                title="Delete"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                                    </div>
+                                    <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                                </div>
+                                <AlertDialogDescription className="pt-2">
+                                    Are you sure you want to delete this item? This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={onDelete}
+                                    className="bg-destructive hover:bg-destructive/90"
+                                >
+                                    Delete
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <div className={`ml-2 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Item Editor */}
+            {isExpanded && (
+                <div className="px-4 py-4 border-t border-slate-200 bg-slate-50">
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Drag Overlay Item (shown while dragging)
+function DragOverlayItem({ item }: { item: ModuleItem }) {
+    const typeConfig = getItemTypeConfig(item.type);
+    const Icon = typeConfig?.icon || FileText;
+
+    return (
+        <div className="bg-white rounded-xl shadow-2xl border-2 border-blue-400 overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-3">
+                <GripVertical className="w-4 h-4 text-slate-400" />
+                <div className={`p-2 rounded-lg ${typeConfig?.color || 'bg-slate-100'}`}>
+                    <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-800 truncate">
+                        {item.title || item.question || `${typeConfig?.label} Item`}
+                    </p>
+                    <p className="text-xs text-slate-500">{typeConfig?.label}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function ModuleEditor({ module }: ModuleEditorProps) {
     const [isPending, startTransition] = useTransition();
     const [items, setItems] = useState(module.items);
@@ -53,6 +213,19 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
     });
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
     const [showAddMenu, setShowAddMenu] = useState(false);
+    const [activeId, setActiveId] = useState<string | null>(null);
+
+    // DnD Sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8, // 8px movement before drag starts
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     const toggleExpand = (itemId: string) => {
         const newExpanded = new Set(expandedItems);
@@ -140,18 +313,30 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
         });
     };
 
-    const moveItem = (index: number, direction: 'up' | 'down') => {
-        const newIndex = direction === 'up' ? index - 1 : index + 1;
-        if (newIndex < 0 || newIndex >= items.length) return;
-
-        const newItems = [...items];
-        [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
-        setItems(newItems);
-
-        startTransition(async () => {
-            await reorderModuleItems(module.id, newItems.map(i => i.id));
-        });
+    // DnD Handlers
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
     };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveId(null);
+
+        if (over && active.id !== over.id) {
+            const oldIndex = items.findIndex(item => item.id === active.id);
+            const newIndex = items.findIndex(item => item.id === over.id);
+
+            const newItems = arrayMove(items, oldIndex, newIndex);
+            setItems(newItems);
+
+            // Persist to database
+            startTransition(async () => {
+                await reorderModuleItems(module.id, newItems.map(i => i.id));
+            });
+        }
+    };
+
+    const activeItem = activeId ? items.find(item => item.id === activeId) : null;
 
     // Group item types by category for the add menu
     const contentTypes = ITEM_TYPES.filter(t => t.category === 'content');
@@ -216,6 +401,14 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
                             </div>
                         </div>
                     </div>
+
+                    {/* Drag hint */}
+                    <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 flex items-center gap-2">
+                            <GripVertical className="w-3 h-3" />
+                            Drag items to reorder
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -229,99 +422,39 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
                     </div>
                 )}
 
-                {items.map((item, index) => {
-                    const typeConfig = getItemTypeConfig(item.type);
-                    const Icon = typeConfig?.icon || FileText;
-                    const isExpanded = expandedItems.has(item.id);
-
-                    return (
-                        <div
-                            key={item.id}
-                            className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden transition-all ${isExpanded ? 'border-blue-300' : 'border-slate-200'}`}
-                        >
-                            {/* Item Header */}
-                            <div
-                                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
-                                onClick={() => toggleExpand(item.id)}
-                            >
-                                <GripVertical className="w-4 h-4 text-slate-400" />
-                                <div className={`p-2 rounded-lg ${typeConfig?.color || 'bg-slate-100'}`}>
-                                    <Icon className="w-4 h-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-slate-800 truncate">
-                                        {item.title || item.question || `${typeConfig?.label} Item`}
-                                    </p>
-                                    <p className="text-xs text-slate-500">{typeConfig?.label}</p>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); moveItem(index, 'up'); }}
-                                        disabled={index === 0}
-                                        className="p-1.5 text-slate-400 hover:text-slate-600 disabled:opacity-30 hover:bg-slate-100 rounded transition-colors"
-                                        title="Move up"
-                                    >
-                                        <ChevronUp className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); moveItem(index, 'down'); }}
-                                        disabled={index === items.length - 1}
-                                        className="p-1.5 text-slate-400 hover:text-slate-600 disabled:opacity-30 hover:bg-slate-100 rounded transition-colors"
-                                        title="Move down"
-                                    >
-                                        <ChevronDown className="w-4 h-4" />
-                                    </button>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <button
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                title="Delete"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                                            <AlertDialogHeader>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                                                        <AlertTriangle className="w-5 h-5 text-destructive" />
-                                                    </div>
-                                                    <AlertDialogTitle>Delete Item</AlertDialogTitle>
-                                                </div>
-                                                <AlertDialogDescription className="pt-2">
-                                                    Are you sure you want to delete this item? This action cannot be undone.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction
-                                                    onClick={() => handleDeleteItem(item.id)}
-                                                    className="bg-destructive hover:bg-destructive/90"
-                                                >
-                                                    Delete
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                    <div className={`ml-2 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                                        <ChevronDown className="w-4 h-4 text-slate-400" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Item Editor */}
-                            {isExpanded && (
-                                <div className="px-4 py-4 border-t border-slate-200 bg-slate-50">
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext
+                        items={items.map(i => i.id)}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        <div className="space-y-3">
+                            {items.map((item) => (
+                                <SortableModuleItem
+                                    key={item.id}
+                                    item={item}
+                                    isExpanded={expandedItems.has(item.id)}
+                                    onToggleExpand={() => toggleExpand(item.id)}
+                                    onDelete={() => handleDeleteItem(item.id)}
+                                    onUpdate={(data) => handleUpdateItem(item.id, data)}
+                                >
                                     <ItemEditor
                                         item={item}
                                         onUpdate={(data) => handleUpdateItem(item.id, data)}
                                     />
-                                </div>
-                            )}
+                                </SortableModuleItem>
+                            ))}
                         </div>
-                    );
-                })}
+                    </SortableContext>
+
+                    <DragOverlay>
+                        {activeItem ? <DragOverlayItem item={activeItem} /> : null}
+                    </DragOverlay>
+                </DndContext>
 
                 {/* Add Item Button */}
                 <div className="relative">
