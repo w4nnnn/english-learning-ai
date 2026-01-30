@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { BookOpen, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
@@ -27,13 +27,22 @@ export default function LoginPage() {
             redirect: false,
         });
 
-        setIsLoading(false);
-
         if (result?.error) {
+            setIsLoading(false);
             toast.error("Login gagal. Periksa username dan password.");
         } else {
             toast.success("Login berhasil!");
-            router.push('/');
+
+            // Get session to check role
+            const session = await getSession();
+            const userRole = session?.user?.role;
+
+            // Redirect based on role
+            if (userRole === 'admin' || userRole === 'guru') {
+                router.push('/admin');
+            } else {
+                router.push('/');
+            }
             router.refresh();
         }
     }
@@ -108,9 +117,16 @@ export default function LoginPage() {
                     </form>
 
                     {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-muted/50 rounded-xl">
+                    <div className="mt-6 p-4 bg-muted/50 rounded-xl space-y-1">
+                        <p className="text-xs text-muted-foreground text-center font-medium mb-2">Demo Credentials:</p>
                         <p className="text-xs text-muted-foreground text-center">
-                            Demo: <span className="font-mono text-foreground">admin</span> / <span className="font-mono text-foreground">admin123</span>
+                            Admin: <span className="font-mono text-foreground">admin</span> / <span className="font-mono text-foreground">admin123</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground text-center">
+                            Guru: <span className="font-mono text-foreground">guru</span> / <span className="font-mono text-foreground">guru123</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground text-center">
+                            Murid: <span className="font-mono text-foreground">murid</span> / <span className="font-mono text-foreground">murid123</span>
                         </p>
                     </div>
                 </div>
@@ -118,3 +134,4 @@ export default function LoginPage() {
         </div>
     );
 }
+

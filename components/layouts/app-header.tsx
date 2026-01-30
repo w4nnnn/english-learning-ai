@@ -50,7 +50,7 @@ export function AppHeader({ userName = 'User', xp = 0, showXp = true }: AppHeade
                             </div>
                             <div className="hidden sm:block">
                                 <h1 className="font-bold text-foreground">English Learning</h1>
-                                <p className="text-xs text-muted-foreground">Learn with joy</p>
+                                <p className="text-xs text-muted-foreground">Learn with fun</p>
                             </div>
                         </Link>
 

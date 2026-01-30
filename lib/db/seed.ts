@@ -497,23 +497,56 @@ Remember:
 // --- Seed Functions ---
 
 export async function seedUsers() {
-    console.log('Seeding users...');
-    const existingUser = await db.select().from(users).where(eq(users.username, 'admin')).get();
+    console.log('🌱 Seeding users...');
 
-    if (!existingUser) {
-        const hashedPassword = await hash('admin123', 10);
-        await db.insert(users).values({
-            id: 'admin-user-id',
+    const defaultUsers = [
+        {
+            id: 'user-admin',
             username: 'admin',
-            passwordHash: hashedPassword,
-            heartCount: 5,
-            xp: 100,
-            streak: 1,
-        });
-        console.log('User "admin" created.');
-    } else {
-        console.log('User "admin" already exists.');
+            password: 'admin123',
+            role: 'admin' as const,
+        },
+        {
+            id: 'user-guru',
+            username: 'guru',
+            password: 'guru123',
+            role: 'guru' as const,
+        },
+        {
+            id: 'user-murid',
+            username: 'murid',
+            password: 'murid123',
+            role: 'murid' as const,
+        },
+    ];
+
+    for (const userData of defaultUsers) {
+        const existing = await db.select().from(users).where(eq(users.username, userData.username)).get();
+
+        if (existing) {
+            console.log(`⏭️  User "${userData.username}" already exists, updating role...`);
+            await db.update(users)
+                .set({ role: userData.role })
+                .where(eq(users.id, existing.id));
+        } else {
+            const passwordHash = await hash(userData.password, 10);
+            await db.insert(users).values({
+                id: userData.id,
+                username: userData.username,
+                passwordHash,
+                role: userData.role,
+                heartCount: 5,
+                xp: userData.role === 'admin' ? 100 : 0,
+                streak: userData.role === 'admin' ? 1 : 0,
+            });
+            console.log(`✅ Created user "${userData.username}" with role "${userData.role}"`);
+        }
     }
+
+    console.log('\n📋 Default credentials:');
+    console.log('  Admin: admin / admin123');
+    console.log('  Guru:  guru / guru123');
+    console.log('  Murid: murid / murid123');
 }
 
 export async function seedModules() {

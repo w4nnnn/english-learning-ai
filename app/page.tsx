@@ -16,8 +16,10 @@ export default async function HomePage() {
     redirect('/login');
   }
 
-  // @ts-ignore
-  const userId = session.user.id;
+  const userId = session.user.id as string;
+  if (!userId) {
+    redirect('/login');
+  }
 
   const [modules, allProgress, userProgress] = await Promise.all([
     getModules(),

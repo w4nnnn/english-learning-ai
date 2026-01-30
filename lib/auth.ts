@@ -5,6 +5,28 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { compare } from "bcryptjs";
 
+declare module "next-auth" {
+    interface User {
+        role?: string;
+    }
+    interface Session {
+        user: {
+            id?: string;
+            name?: string | null;
+            email?: string | null;
+            image?: string | null;
+            role?: string;
+        };
+    }
+}
+
+declare module "next-auth/jwt" {
+    interface JWT {
+        id?: string;
+        role?: string;
+    }
+}
+
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -33,6 +55,7 @@ export const authOptions: NextAuthOptions = {
                 return {
                     id: user.id,
                     name: user.username,
+                    role: user.role,
                 };
             }
         })
@@ -44,13 +67,14 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
+                token.role = user.role;
             }
             return token;
         },
         async session({ session, token }) {
             if (token && session.user) {
-                // @ts-ignore // We know token.id exists because we put it there
                 session.user.id = token.id;
+                session.user.role = token.role;
             }
             return session;
         }

@@ -9,8 +9,17 @@ export default async function AdminLayout({
     children: React.ReactNode;
 }) {
     const session = await getServerSession(authOptions);
+
+    // Not logged in -> redirect to login
     if (!session) {
         redirect('/login');
+    }
+
+    // Check if user has admin or guru role
+    const userRole = session.user?.role;
+    if (userRole !== 'admin' && userRole !== 'guru') {
+        // Murid cannot access admin area
+        redirect('/');
     }
 
     return (

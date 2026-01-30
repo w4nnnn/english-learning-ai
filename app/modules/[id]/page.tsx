@@ -24,8 +24,11 @@ export default async function ModulePage({
         notFound();
     }
 
-    // @ts-ignore
-    const userId = session.user.id;
+    const userId = session.user.id as string;
+    if (!userId) {
+        redirect('/login');
+    }
+
     const progress = await getUserModuleProgress(userId, id);
 
     return (

@@ -15,6 +15,9 @@ import {
     Check,
     Eye,
     EyeOff,
+    Shield,
+    GraduationCap,
+    BookOpen,
 } from 'lucide-react';
 import {
     AlertDialog,
@@ -35,10 +38,18 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 interface User {
     id: string;
     username: string;
+    role: string | null;
     heartCount: number | null;
     xp: number | null;
     streak: number | null;
@@ -49,12 +60,18 @@ interface UsersClientProps {
     initialUsers: User[];
 }
 
+const ROLES = [
+    { value: 'admin', label: 'Admin', icon: Shield, color: 'text-red-600 bg-red-100' },
+    { value: 'guru', label: 'Guru', icon: GraduationCap, color: 'text-blue-600 bg-blue-100' },
+    { value: 'murid', label: 'Murid', icon: BookOpen, color: 'text-green-600 bg-green-100' },
+];
+
 export function UsersClient({ initialUsers }: UsersClientProps) {
     const [users, setUsers] = useState(initialUsers);
     const [isPending, startTransition] = useTransition();
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
-    const [formData, setFormData] = useState({ username: '', password: '' });
+    const [formData, setFormData] = useState({ username: '', password: '', role: 'murid' });
     const [showPassword, setShowPassword] = useState(false);
 
     const handleCreate = async () => {
@@ -66,16 +83,21 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
         startTransition(async () => {
             try {
                 const { createUser } = await import('@/lib/actions/users');
-                const result = await createUser(formData);
+                const result = await createUser({
+                    username: formData.username,
+                    password: formData.password,
+                    role: formData.role,
+                });
                 setUsers([...users, {
                     id: result.id,
                     username: formData.username,
+                    role: formData.role,
                     heartCount: 5,
                     xp: 0,
                     streak: 0,
                     lastActive: null,
                 }]);
-                setFormData({ username: '', password: '' });
+                setFormData({ username: '', password: '', role: 'murid' });
                 setIsCreateDialogOpen(false);
                 toast.success('User berhasil dibuat!');
             } catch (error) {
@@ -93,14 +115,15 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                 await updateUser(editingUser.id, {
                     username: formData.username || undefined,
                     password: formData.password || undefined,
+                    role: formData.role || undefined,
                 });
                 setUsers(users.map(u =>
                     u.id === editingUser.id
-                        ? { ...u, username: formData.username || u.username }
+                        ? { ...u, username: formData.username || u.username, role: formData.role || u.role }
                         : u
                 ));
                 setEditingUser(null);
-                setFormData({ username: '', password: '' });
+                setFormData({ username: '', password: '', role: 'murid' });
                 toast.success('User berhasil diupdate!');
             } catch (error) {
                 toast.error('Gagal update user!');
@@ -140,7 +163,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
 
     const openEditDialog = (user: User) => {
         setEditingUser(user);
-        setFormData({ username: user.username, password: '' });
+        setFormData({ username: user.username, password: '', role: user.role || 'murid' });
     };
 
     return (
@@ -173,7 +196,19 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                                 {user.username.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-foreground truncate">{user.username}</h3>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-semibold text-foreground truncate">{user.username}</h3>
+                                    {(() => {
+                                        const roleConfig = ROLES.find(r => r.value === user.role) || ROLES[2];
+                                        const RoleIcon = roleConfig.icon;
+                                        return (
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${roleConfig.color}`}>
+                                                <RoleIcon className="w-3 h-3" />
+                                                {roleConfig.label}
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
                                 <p className="text-xs text-muted-foreground">
                                     {user.lastActive
                                         ? `Aktif: ${new Date(user.lastActive).toLocaleDateString('id-ID')}`
@@ -302,6 +337,30 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                                 </button>
                             </div>
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Role</label>
+                            <Select
+                                value={formData.role}
+                                onValueChange={(value) => setFormData({ ...formData, role: value })}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih role..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {ROLES.map((role) => {
+                                        const RoleIcon = role.icon;
+                                        return (
+                                            <SelectItem key={role.value} value={role.value}>
+                                                <div className="flex items-center gap-2">
+                                                    <RoleIcon className="w-4 h-4" />
+                                                    <span>{role.label}</span>
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <DialogFooter>
                         <button
@@ -357,6 +416,30 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Role</label>
+                            <Select
+                                value={formData.role}
+                                onValueChange={(value) => setFormData({ ...formData, role: value })}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih role..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {ROLES.map((role) => {
+                                        const RoleIcon = role.icon;
+                                        return (
+                                            <SelectItem key={role.value} value={role.value}>
+                                                <div className="flex items-center gap-2">
+                                                    <RoleIcon className="w-4 h-4" />
+                                                    <span>{role.label}</span>
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <DialogFooter>

@@ -5,6 +5,7 @@ export const users = sqliteTable('users', {
     id: text('id').primaryKey(),
     username: text('username').unique().notNull(),
     passwordHash: text('password_hash').notNull(),
+    role: text('role').default('murid').notNull(), // 'admin' | 'guru' | 'murid'
     heartCount: integer('heart_count').default(5),
     xp: integer('xp').default(0),
     streak: integer('streak').default(0),
