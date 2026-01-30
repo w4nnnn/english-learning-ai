@@ -10,6 +10,8 @@ import remarkGfm from 'remark-gfm';
 import { WordOrdering } from '@/components/question-types/word-ordering';
 import { MultipleChoice } from '@/components/question-types/multiple-choice';
 import { ImageSelect } from '@/components/question-types/image-select';
+import { SpeakButton } from '@/components/ui/speak-button';
+import { VoiceInputButton } from '@/components/ui/voice-input-button';
 import {
     saveUserProgress,
     saveItemResponse,
@@ -166,9 +168,12 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                             <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-elegant-lg">
                                 <Sparkles className="w-8 h-8 text-white" />
                             </div>
-                            <h1 className="text-3xl font-bold text-foreground mb-3">
-                                {currentItem.title}
-                            </h1>
+                            <div className="flex items-center justify-center gap-2 mb-3">
+                                <h1 className="text-3xl font-bold text-foreground">
+                                    {currentItem.title}
+                                </h1>
+                                <SpeakButton text={currentItem.title || ''} size="lg" />
+                            </div>
                             <p className="text-muted-foreground">
                                 Tekan lanjutkan untuk mulai
                             </p>
@@ -179,9 +184,12 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                 {/* Material Type */}
                 {currentItem.type === 'material' && (
                     <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-foreground mb-6">
-                            {currentItem.title}
-                        </h2>
+                        <div className="flex items-center gap-2 mb-6">
+                            <h2 className="text-2xl font-bold text-foreground">
+                                {currentItem.title}
+                            </h2>
+                            <SpeakButton text={currentItem.title || ''} />
+                        </div>
                         <div className="bg-white rounded-2xl p-8 shadow-elegant border border-border">
                             <div>
                                 <ReactMarkdown
@@ -237,9 +245,12 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                     currentItem.type === 'material_image' && (
                         <div className="flex-1">
                             {currentItem.title && (
-                                <h2 className="text-2xl font-bold text-foreground mb-6">
-                                    {currentItem.title}
-                                </h2>
+                                <div className="flex items-center gap-2 mb-6">
+                                    <h2 className="text-2xl font-bold text-foreground">
+                                        {currentItem.title}
+                                    </h2>
+                                    <SpeakButton text={currentItem.title} />
+                                </div>
                             )}
                             <div className="bg-white rounded-2xl shadow-elegant border border-border overflow-hidden">
                                 {currentItem.content && (
@@ -284,9 +295,12 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                         return (
                             <div className="flex-1">
                                 {currentItem.title && (
-                                    <h2 className="text-2xl font-bold text-foreground mb-6">
-                                        {currentItem.title}
-                                    </h2>
+                                    <div className="flex items-center gap-2 mb-6">
+                                        <h2 className="text-2xl font-bold text-foreground">
+                                            {currentItem.title}
+                                        </h2>
+                                        <SpeakButton text={currentItem.title} />
+                                    </div>
                                 )}
                                 <div className="bg-black rounded-2xl shadow-elegant overflow-hidden">
                                     {youtubeId && (
@@ -348,15 +362,18 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                                 <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
                                     Pertanyaan {currentIndex + 1} dari {totalItems}
                                 </span>
-                                <div className="text-2xl font-bold text-foreground">
-                                    <ReactMarkdown
-                                        components={{
-                                            p: ({ node, ...props }: any) => <div {...props} />,
-                                            strong: ({ node, ...props }: any) => <span className="text-primary" {...props} />
-                                        }}
-                                    >
-                                        {currentItem.question || ''}
-                                    </ReactMarkdown>
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="text-2xl font-bold text-foreground">
+                                        <ReactMarkdown
+                                            components={{
+                                                p: ({ node, ...props }: any) => <div {...props} />,
+                                                strong: ({ node, ...props }: any) => <span className="text-primary" {...props} />
+                                            }}
+                                        >
+                                            {currentItem.question || ''}
+                                        </ReactMarkdown>
+                                    </div>
+                                    <SpeakButton text={currentItem.question || ''} size="lg" />
                                 </div>
                             </div>
 
@@ -443,6 +460,39 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
                                             onSelect={(id) => setUserAnswer(id)}
                                             disabled={status !== 'idle'}
                                         />
+                                    </div>
+                                )}
+
+                                {/* Voice Answer */}
+                                {currentItem.type === 'voice_answer' && (
+                                    <div className="space-y-4">
+                                        {/* Hint */}
+                                        {currentItem.content && (
+                                            <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                                                <p className="text-sm text-blue-700">
+                                                    <span className="font-medium">Hint:</span> {currentItem.content}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Voice Input Area */}
+                                        <div className="flex flex-col items-center gap-4 py-6">
+                                            <VoiceInputButton
+                                                onTranscript={(text) => setUserAnswer(text)}
+                                                size="lg"
+                                            />
+                                            <p className="text-sm text-muted-foreground">
+                                                Klik mikrofon dan ucapkan jawabanmu
+                                            </p>
+
+                                            {/* Current Answer Display */}
+                                            {userAnswer && (
+                                                <div className="w-full p-4 bg-slate-100 rounded-xl">
+                                                    <p className="text-sm text-muted-foreground mb-1">Jawabanmu:</p>
+                                                    <p className="text-lg font-medium text-foreground">{userAnswer}</p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>

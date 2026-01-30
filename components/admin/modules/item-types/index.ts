@@ -6,6 +6,7 @@ import {
     Image,
     Video,
     ImageIcon,
+    Mic,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -32,6 +33,7 @@ export const ITEM_TYPES: ItemTypeConfig[] = [
     { type: 'select_image', label: 'Select Image', icon: Image, color: 'bg-pink-100 text-pink-600', description: 'Choose correct image', category: 'question' },
     { type: 'question_image', label: 'Question (Image)', icon: ImageIcon, color: 'bg-teal-100 text-teal-600', description: 'Text question with image', category: 'question' },
     { type: 'question_video', label: 'Question (Video)', icon: Video, color: 'bg-teal-100 text-teal-600', description: 'Text question with video', category: 'question' },
+    { type: 'voice_answer', label: 'Voice Answer', icon: Mic, color: 'bg-red-100 text-red-600', description: 'Answer with voice', category: 'question' },
 ];
 
 export function getItemTypeConfig(type: string): ItemTypeConfig | undefined {

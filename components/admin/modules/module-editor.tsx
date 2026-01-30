@@ -68,6 +68,7 @@ import { ArrangeWordsEditor } from './item-types/arrange-words-editor';
 import { SelectImageEditor } from './item-types/select-image-editor';
 import { McImageEditor } from './item-types/mc-image-editor';
 import { QuestionImageEditor, QuestionVideoEditor } from './item-types/question-media-editor';
+import { VoiceAnswerEditor } from './item-types/voice-answer-editor';
 
 interface ModuleEditorProps {
     module: Module & { items: ModuleItem[] };
@@ -597,6 +598,9 @@ function ItemEditor({
 
         case 'question_video':
             return <QuestionVideoEditor item={item} onUpdate={onUpdate} />;
+
+        case 'voice_answer':
+            return <VoiceAnswerEditor item={item} onUpdate={onUpdate} />;
 
         default:
             // Question types with shared structure
