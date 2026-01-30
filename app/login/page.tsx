@@ -115,20 +115,6 @@ export default function LoginPage() {
                             )}
                         </Button>
                     </form>
-
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-muted/50 rounded-xl space-y-1">
-                        <p className="text-xs text-muted-foreground text-center font-medium mb-2">Demo Credentials:</p>
-                        <p className="text-xs text-muted-foreground text-center">
-                            Admin: <span className="font-mono text-foreground">admin</span> / <span className="font-mono text-foreground">admin123</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground text-center">
-                            Guru: <span className="font-mono text-foreground">guru</span> / <span className="font-mono text-foreground">guru123</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground text-center">
-                            Murid: <span className="font-mono text-foreground">murid</span> / <span className="font-mono text-foreground">murid123</span>
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
