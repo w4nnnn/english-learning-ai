@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "English Learning AI",
-  description: "Belajar Bahasa Inggris dengan AI",
+  title: "English Learning",
+  description: "Belajar Bahasa Inggris dengan",
 };
 
 export default function RootLayout({
