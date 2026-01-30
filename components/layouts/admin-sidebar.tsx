@@ -65,9 +65,9 @@ export function AdminSidebar({ userName = 'Admin' }: AdminSidebarProps) {
 
             {/* Sidebar */}
             <aside className={`
-                fixed lg:static inset-y-0 left-0 z-40
-                w-72 bg-sidebar text-sidebar-foreground 
-                flex flex-col
+                fixed lg:sticky lg:top-0 inset-y-0 left-0 z-40
+                w-72 h-screen bg-sidebar text-sidebar-foreground 
+                flex flex-col overflow-y-auto
                 transform transition-transform duration-300 ease-out
                 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>

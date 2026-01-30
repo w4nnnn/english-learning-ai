@@ -543,7 +543,7 @@ export function ModuleEditor({ module }: ModuleEditorProps) {
                             Apakah Anda ingin langsung mempublish module ini atau simpan sebagai draft?
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="flex gap-2 sm:gap-0">
+                    <DialogFooter className="flex !gap-2 sm:gap-0">
                         <button
                             onClick={() => setShowPublishDialog(false)}
                             className="px-4 py-2 text-sm border border-input rounded-lg hover:bg-muted transition-colors"
