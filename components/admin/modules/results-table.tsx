@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { ChevronDown, ChevronRight, CheckCircle, XCircle, Clock, MinusCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { StudentResult } from '@/lib/actions/user-progress';
@@ -102,9 +102,8 @@ export function ResultsTable({ results }: ResultsTableProps) {
                     </thead>
                     <tbody className="divide-y divide-border">
                         {results.map((result) => (
-                            <>
+                            <Fragment key={result.userId}>
                                 <tr 
-                                    key={result.userId}
                                     className="hover:bg-muted/30 transition-colors cursor-pointer"
                                     onClick={() => toggleRow(result.userId)}
                                 >
@@ -209,7 +208,7 @@ export function ResultsTable({ results }: ResultsTableProps) {
                                         </td>
                                     </tr>
                                 )}
-                            </>
+                            </Fragment>
                         ))}
                     </tbody>
                 </table>
