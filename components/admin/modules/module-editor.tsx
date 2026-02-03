@@ -18,6 +18,7 @@ import {
     MessageCircleQuestion,
     Star,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -135,9 +136,16 @@ function SortableModuleItem({
                     <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 truncate">
-                        {item.title || item.question || `${typeConfig?.label} Item`}
-                    </p>
+                    <div className="font-medium text-slate-800 truncate">
+                        <ReactMarkdown
+                            components={{
+                                p: ({ children }) => <span>{children}</span>,
+                                strong: ({ children }) => <strong className="text-primary font-semibold">{children}</strong>,
+                            }}
+                        >
+                            {item.title || item.question || `${typeConfig?.label} Item`}
+                        </ReactMarkdown>
+                    </div>
                     <p className="text-xs text-slate-500">{typeConfig?.label}</p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -203,9 +211,16 @@ function DragOverlayItem({ item }: { item: ModuleItem }) {
                     <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 truncate">
-                        {item.title || item.question || `${typeConfig?.label} Item`}
-                    </p>
+                    <div className="font-medium text-slate-800 truncate">
+                        <ReactMarkdown
+                            components={{
+                                p: ({ children }) => <span>{children}</span>,
+                                strong: ({ children }) => <strong className="text-primary font-semibold">{children}</strong>,
+                            }}
+                        >
+                            {item.title || item.question || `${typeConfig?.label} Item`}
+                        </ReactMarkdown>
+                    </div>
                     <p className="text-xs text-slate-500">{typeConfig?.label}</p>
                 </div>
             </div>

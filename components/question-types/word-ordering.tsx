@@ -7,6 +7,8 @@ import {
     closestCenter,
     KeyboardSensor,
     PointerSensor,
+    TouchSensor,
+    MouseSensor,
     useSensor,
     useSensors,
     DragEndEvent,
@@ -75,7 +77,17 @@ export function WordOrdering({ initialWords, onOrderChange, disabled }: WordOrde
     }, [initialWords]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(MouseSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 200,
+                tolerance: 5,
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })

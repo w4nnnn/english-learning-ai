@@ -1,6 +1,6 @@
 import { getModules } from '@/lib/actions/modules';
 import Link from 'next/link';
-import { Plus, Eye, EyeOff, Pencil, BookOpen, Search } from 'lucide-react';
+import { Plus, Eye, EyeOff, Pencil, BookOpen, Search, Users } from 'lucide-react';
 import { DeleteModuleButton, TogglePublishButton } from '@/components/admin/modules/module-actions';
 
 export default async function ModulesPage() {
@@ -97,6 +97,13 @@ export default async function ModulesPage() {
 
                                 {/* Actions */}
                                 <div className="flex items-center gap-1">
+                                    <Link
+                                        href={`/admin/modules/${module.id}/results`}
+                                        className="p-2.5 text-muted-foreground hover:text-green-600 hover:bg-green-50 rounded-xl transition-elegant"
+                                        title="Hasil Siswa"
+                                    >
+                                        <Users className="w-4 h-4" />
+                                    </Link>
                                     <TogglePublishButton
                                         moduleId={module.id}
                                         isPublished={module.isPublished ?? false}

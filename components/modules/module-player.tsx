@@ -96,12 +96,19 @@ export function ModulePlayer({ module, userId, initialProgress }: ModulePlayerPr
             }
 
             // Save response and force progress update if correct
-            await saveItemResponse(userId, module.id, currentItem.id, userAnswer, isCorrect);
-            if (isCorrect) {
-                await updateModuleProgress(userId, module.id, {
-                    currentItemIndex: currentIndex,
-                    status: 'in_progress'
-                });
+            try {
+                const result = await saveItemResponse(userId, module.id, currentItem.id, userAnswer, isCorrect);
+                if (!result.success) {
+                    console.error('Failed to save response:', result.error);
+                }
+                if (isCorrect) {
+                    await updateModuleProgress(userId, module.id, {
+                        currentItemIndex: currentIndex,
+                        status: 'in_progress'
+                    });
+                }
+            } catch (error) {
+                console.error('Error saving progress:', error);
             }
         } else {
             handleNext();

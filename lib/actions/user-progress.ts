@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { users, userModuleProgress, userItemResponses, moduleItems } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { users, userModuleProgress, userItemResponses, moduleItems, modules } from '@/lib/db/schema';
+import { eq, and, asc } from 'drizzle-orm';
 
 export async function saveUserProgress(userId: string, data: {
     heartCount?: number;
@@ -25,34 +25,40 @@ export async function saveItemResponse(
     itemId: string,
     userAnswer: string,
     isCorrect: boolean
-) {
-    // Check if response already exists
-    const existing = await db.select()
-        .from(userItemResponses)
-        .where(and(
-            eq(userItemResponses.userId, userId),
-            eq(userItemResponses.itemId, itemId)
-        ))
-        .get();
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        // Check if response already exists
+        const existing = await db.select()
+            .from(userItemResponses)
+            .where(and(
+                eq(userItemResponses.userId, userId),
+                eq(userItemResponses.itemId, itemId)
+            ))
+            .get();
 
-    if (existing) {
-        // Update attempt count
-        await db.update(userItemResponses)
-            .set({
+        if (existing) {
+            // Update attempt count
+            await db.update(userItemResponses)
+                .set({
+                    userAnswer,
+                    isCorrect,
+                    attemptCount: (existing.attemptCount ?? 1) + 1,
+                    answeredAt: new Date(),
+                })
+                .where(eq(userItemResponses.id, existing.id));
+        } else {
+            await db.insert(userItemResponses).values({
+                userId,
+                moduleId,
+                itemId,
                 userAnswer,
                 isCorrect,
-                attemptCount: (existing.attemptCount ?? 1) + 1,
-                answeredAt: new Date(),
-            })
-            .where(eq(userItemResponses.id, existing.id));
-    } else {
-        await db.insert(userItemResponses).values({
-            userId,
-            moduleId,
-            itemId,
-            userAnswer,
-            isCorrect,
-        });
+            });
+        }
+        return { success: true };
+    } catch (error) {
+        console.error('Error saving item response:', error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
 }
 
@@ -149,4 +155,97 @@ export async function getAllModuleProgress(userId: string) {
     return await db.select()
         .from(userModuleProgress)
         .where(eq(userModuleProgress.userId, userId));
+}
+
+// ===== EXPORT STUDENT RESULTS =====
+
+export type StudentResult = {
+    userId: string;
+    username: string;
+    status: string;
+    score: number;
+    totalItems: number;
+    completedItems: number;
+    startedAt: Date | null;
+    completedAt: Date | null;
+    responses: {
+        itemId: string;
+        question: string;
+        userAnswer: string | null;
+        correctAnswer: string | null;
+        isCorrect: boolean | null;
+        attemptCount: number;
+    }[];
+};
+
+export async function getModuleStudentResults(moduleId: string): Promise<StudentResult[]> {
+    // Get module info
+    const module = await db.select().from(modules).where(eq(modules.id, moduleId)).get();
+    if (!module) return [];
+
+    // Get all module items (questions only)
+    const items = await db.select()
+        .from(moduleItems)
+        .where(eq(moduleItems.moduleId, moduleId))
+        .orderBy(asc(moduleItems.order));
+
+    const questionItems = items.filter(i => 
+        !['header', 'material', 'material_image', 'material_video'].includes(i.type)
+    );
+
+    // Get all progress for this module
+    const progressList = await db.select()
+        .from(userModuleProgress)
+        .where(eq(userModuleProgress.moduleId, moduleId));
+
+    // Get user data for all participants
+    const userIds = progressList.map(p => p.userId);
+    const allUsers = await db.select().from(users);
+    const userMap = new Map(allUsers.map(u => [u.id, u]));
+
+    // Get all responses for this module
+    const allResponses = await db.select()
+        .from(userItemResponses)
+        .where(eq(userItemResponses.moduleId, moduleId));
+
+    // Build result for each user
+    const results: StudentResult[] = [];
+
+    for (const progress of progressList) {
+        const user = userMap.get(progress.userId);
+        if (!user) continue;
+
+        const userResponses = allResponses.filter(r => r.userId === progress.userId);
+        const responseMap = new Map(userResponses.map(r => [r.itemId, r]));
+
+        // Calculate score
+        const correctCount = userResponses.filter(r => r.isCorrect).length;
+        const score = questionItems.length > 0 
+            ? Math.round((correctCount / questionItems.length) * 100) 
+            : 0;
+
+        results.push({
+            userId: progress.userId,
+            username: user.username,
+            status: progress.status || 'not_started',
+            score,
+            totalItems: progress.totalItems || 0,
+            completedItems: progress.completedItems || 0,
+            startedAt: progress.startedAt,
+            completedAt: progress.completedAt,
+            responses: questionItems.map(item => {
+                const response = responseMap.get(item.id);
+                return {
+                    itemId: item.id,
+                    question: item.question || item.title || '',
+                    userAnswer: response?.userAnswer || null,
+                    correctAnswer: item.correctAnswer,
+                    isCorrect: response?.isCorrect ?? null,
+                    attemptCount: response?.attemptCount || 0,
+                };
+            }),
+        });
+    }
+
+    return results;
 }
