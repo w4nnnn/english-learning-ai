@@ -2,6 +2,8 @@ import { db } from '@/lib/db';
 import { modules, moduleItems, users } from '@/lib/db/schema';
 import { hash } from 'bcryptjs';
 import { eq } from 'drizzle-orm';
+import * as XLSX from 'xlsx';
+import { STUDENTS_DATA } from './students';
 
 // --- Sample Data from modul_belajar ---
 
@@ -520,6 +522,7 @@ export async function seedUsers() {
         },
     ];
 
+    // Seed Default Users
     for (const userData of defaultUsers) {
         const existing = await db.select().from(users).where(eq(users.username, userData.username)).get();
 
@@ -543,26 +546,130 @@ export async function seedUsers() {
         }
     }
 
-    console.log('\n📋 Default credentials:');
+    // Seed Students from Data
+    console.log('🌱 Seeding students from list...');
+    let createdCount = 0;
+    let skippedCount = 0;
+    const newCredentials: string[] = [];
+    const excelExportData: any[] = [];
+
+    // Helper to generate random password
+    const generatePassword = (length = 6) => {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let pass = '';
+        for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * chars.length);
+            pass += chars[randomIndex];
+        }
+        return pass;
+    };
+
+    for (const student of STUDENTS_DATA) {
+        // Generate username: 81_agni_maurazita
+        const cleanName = student.name.toLowerCase()
+            .replace(/[\s\W]+/g, '_') // Replace spaces/symbols with underscore
+            .replace(/^_|_$/g, '');   // Trim underscores
+
+        const username = `${student.className.replace('.', '')}_${cleanName}`;
+
+        const existing = await db.select().from(users).where(eq(users.username, username)).get();
+
+        if (!existing) {
+            const plainPassword = generatePassword();
+            const passwordHash = await hash(plainPassword, 10);
+
+            await db.insert(users).values({
+                id: `user-${username}`,
+                username,
+                passwordHash,
+                role: 'murid',
+                className: student.className,
+                heartCount: 5,
+                xp: 0,
+                streak: 0,
+            });
+            createdCount++;
+            newCredentials.push(`username: ${username}\npassword: ${plainPassword}`);
+            excelExportData.push({
+                Nama: student.name,
+                Kelas: student.className,
+                Username: username,
+                Password: plainPassword
+            });
+        } else {
+            skippedCount++;
+        }
+    }
+    console.log(`✅ Student seeding finished: ${createdCount} created, ${skippedCount} skipped.`);
+
+    if (newCredentials.length > 0) {
+        console.log('\n� NEW STUDENT CREDENTIALS (Save these!):');
+        console.log('================================================');
+        console.log(newCredentials.join('\n\n'));
+        console.log('================================================\n');
+
+        // Export to Excel
+        try {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(excelExportData);
+
+            // Adjust column widths
+            const colWidths = [
+                { wch: 30 }, // Nama
+                { wch: 10 }, // Kelas
+                { wch: 25 }, // Username
+                { wch: 15 }  // Password
+            ];
+            ws['!cols'] = colWidths;
+
+            XLSX.utils.book_append_sheet(wb, ws, "Akun Siswa Baru");
+            const fileName = "Data_Akun_Siswa.xlsx";
+            XLSX.writeFile(wb, fileName);
+            console.log(`✅ Excel file created: ${fileName}`);
+        } catch (error) {
+            console.error('❌ Failed to create Excel file:', error);
+        }
+    }
+
+    console.log('\n�📋 Default credentials:');
     console.log('  Admin: admin / admin123');
     console.log('  Guru:  guru / guru123');
     console.log('  Murid: murid / murid123');
+    console.log('  Siswa: (Lihat log di atas untuk password siswa baru)');
 }
 
 export async function seedModules() {
     console.log('Seeding modules from modul_belajar...');
 
-    // Clear existing data
-    await db.delete(moduleItems);
-    await db.delete(modules);
+    let modulesCreated = 0;
+    let modulesSkipped = 0;
 
     // Insert modules
-    await db.insert(modules).values(SAMPLE_MODULES);
-    console.log(`Seeded ${SAMPLE_MODULES.length} modules.`);
+    for (const mod of SAMPLE_MODULES) {
+        const existing = await db.select().from(modules).where(eq(modules.id, mod.id)).get();
+        if (!existing) {
+            await db.insert(modules).values(mod);
+            modulesCreated++;
+        } else {
+            modulesSkipped++;
+        }
+    }
+    console.log(`✅ Modules: ${modulesCreated} created, ${modulesSkipped} skipped.`);
+
+    let itemsCreated = 0;
+    let itemsSkipped = 0;
 
     // Insert module items
-    await db.insert(moduleItems).values(SAMPLE_MODULE_ITEMS);
-    console.log(`Seeded ${SAMPLE_MODULE_ITEMS.length} module items.`);
+    for (const item of SAMPLE_MODULE_ITEMS) {
+        const existing = await db.select().from(moduleItems).where(eq(moduleItems.id, item.id)).get();
+        if (!existing) {
+            await db.insert(moduleItems).values(item);
+            itemsCreated++;
+        } else {
+            itemsSkipped++;
+        }
+    }
+    console.log(`✅ Module Items: ${itemsCreated} created, ${itemsSkipped} skipped.`);
 }
 
 // Backward compatibility
